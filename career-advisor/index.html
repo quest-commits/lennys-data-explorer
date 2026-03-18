@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lenny's PM Career Advisor</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a25;
+    --border: #2a2a3a;
+    --text: #e8e8f0;
+    --text-dim: #8888aa;
+    --accent: #6c5ce7;
+    --accent2: #a855f7;
+    --accent3: #ec4899;
+    --green: #10b981;
+    --orange: #f59e0b;
+    --blue: #3b82f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .bg-glow {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(108,92,231,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(236,72,153,0.04) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+
+  /* Header */
+  .header { text-align: center; padding: 40px 0 30px; }
+  .header h1 {
+    font-size: 2.4em; font-weight: 800; letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #6c5ce7, #a855f7, #ec4899);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p { color: var(--text-dim); margin-top: 8px; font-size: 1.05em; }
+  .header .badge {
+    display: inline-block; margin-top: 12px; padding: 4px 14px;
+    background: rgba(108,92,231,0.15); border: 1px solid rgba(108,92,231,0.3);
+    border-radius: 20px; font-size: 0.8em; color: var(--accent2);
+  }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface); border-radius: 12px; padding: 4px; }
+  .tab {
+    flex: 1; padding: 12px; text-align: center; border-radius: 10px; cursor: pointer;
+    font-weight: 600; font-size: 0.9em; color: var(--text-dim); transition: all 0.2s;
+    border: none; background: none;
+  }
+  .tab.active { background: var(--accent); color: white; }
+  .tab:hover:not(.active) { background: var(--surface2); color: var(--text); }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Advisor Selection */
+  .advisor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .advisor-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; cursor: pointer; transition: all 0.25s;
+    position: relative; overflow: hidden;
+  }
+  .advisor-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,92,231,0.15); }
+  .advisor-card.selected { border-color: var(--accent); background: rgba(108,92,231,0.08); }
+  .advisor-card .name { font-size: 1.15em; font-weight: 700; margin-bottom: 4px; }
+  .advisor-card .role { font-size: 0.82em; color: var(--text-dim); margin-bottom: 10px; }
+  .advisor-card .topics { display: flex; flex-wrap: wrap; gap: 4px; }
+  .advisor-card .topic-tag {
+    font-size: 0.72em; padding: 2px 8px; border-radius: 10px;
+    background: rgba(108,92,231,0.12); color: var(--accent2);
+  }
+  .advisor-card .quote-preview {
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+    font-size: 0.85em; color: var(--text-dim); font-style: italic; line-height: 1.5;
+  }
+
+  /* Challenge Selector */
+  .section-title { font-size: 1.2em; font-weight: 700; margin-bottom: 16px; }
+  .challenge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .challenge-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; cursor: pointer; font-size: 0.9em; color: var(--text);
+    transition: all 0.2s; text-align: left; font-family: inherit;
+  }
+  .challenge-btn:hover { border-color: var(--accent); background: var(--surface2); }
+  .challenge-btn.selected { border-color: var(--accent); background: rgba(108,92,231,0.1); }
+  .challenge-btn .icon { font-size: 1.3em; margin-bottom: 6px; display: block; }
+
+  /* Role & Level */
+  .form-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .form-group { flex: 1; min-width: 200px; }
+  .form-group label { display: block; font-size: 0.85em; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; }
+  .form-group select {
+    width: 100%; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-size: 0.95em; font-family: inherit;
+    appearance: none; cursor: pointer;
+  }
+  .form-group select:focus { outline: none; border-color: var(--accent); }
+
+  /* Advice Display */
+  .advice-container { margin-top: 20px; }
+  .advice-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 24px; margin-bottom: 16px; transition: all 0.3s;
+    animation: fadeInUp 0.4s ease;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .advice-card .guest-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .advice-card .guest-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.1em; color: white; flex-shrink: 0;
+  }
+  .advice-card .guest-name { font-weight: 700; font-size: 1em; }
+  .advice-card .guest-title { font-size: 0.8em; color: var(--text-dim); }
+  .advice-card blockquote {
+    border-left: 3px solid var(--accent); padding-left: 16px; margin: 14px 0;
+    font-size: 0.95em; line-height: 1.65; color: var(--text); font-style: italic;
+  }
+  .advice-card .context {
+    font-size: 0.88em; color: var(--text-dim); line-height: 1.6; margin-top: 12px;
+    padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  .advice-card .listen-link {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+    color: var(--accent2); font-size: 0.85em; text-decoration: none; font-weight: 600;
+  }
+  .advice-card .listen-link:hover { text-decoration: underline; }
+
+  /* Reading List */
+  .reading-list { margin-top: 24px; }
+  .reading-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin-bottom: 10px; transition: all 0.2s;
+  }
+  .reading-item:hover { border-color: var(--accent); }
+  .reading-item .num {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.85em; color: white;
+  }
+  .reading-item .info .title { font-weight: 600; font-size: 0.95em; margin-bottom: 4px; }
+  .reading-item .info .desc { font-size: 0.82em; color: var(--text-dim); line-height: 1.5; }
+  .reading-item .info .match { font-size: 0.75em; color: var(--green); font-weight: 600; margin-top: 6px; }
+
+  /* Get Advice Button */
+  .get-advice-btn {
+    width: 100%; padding: 16px; border: none; border-radius: 12px; cursor: pointer;
+    font-size: 1.05em; font-weight: 700; font-family: inherit; color: white;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    background-size: 200% 200%; animation: shimmer 3s ease infinite;
+    transition: all 0.2s; margin-top: 10px;
+  }
+  .get-advice-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,92,231,0.3); }
+  @keyframes shimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+  /* Explore tab */
+  .search-box {
+    width: 100%; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text); font-size: 1em; font-family: inherit;
+    margin-bottom: 20px;
+  }
+  .search-box:focus { outline: none; border-color: var(--accent); }
+  .search-box::placeholder { color: var(--text-dim); }
+
+  .wisdom-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .wisdom-card:hover { border-color: var(--accent); }
+  .wisdom-card .w-topic { font-size: 0.75em; color: var(--accent2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .wisdom-card .w-quote { font-size: 0.92em; line-height: 1.6; font-style: italic; margin-bottom: 8px; }
+  .wisdom-card .w-author { font-size: 0.82em; color: var(--text-dim); font-weight: 600; }
+
+  /* Footer */
+  .footer {
+    text-align: center; padding: 40px 0 20px; color: var(--text-dim); font-size: 0.82em;
+    border-top: 1px solid var(--border); margin-top: 40px;
+  }
+  .footer a { color: var(--accent2); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .header h1 { font-size: 1.7em; }
+    .advisor-grid { grid-template-columns: 1fr; }
+    .challenge-grid { grid-template-columns: 1fr 1fr; }
+    .form-row { flex-direction: column; }
+    .tabs { font-size: 0.85em; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="container">
+  <div class="header">
+    <h1>Lenny's PM Career Advisor</h1>
+    <p>Personalized career wisdom from 50 of the world's best product minds</p>
+    <span class="badge">Powered by Lenny's Data &middot; 50 Podcasts &middot; 10 Newsletters</span>
+  </div>
+
+  <!-- Featured Quote Carousel -->
+  <div id="featured-quote" style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 24px; cursor: pointer; transition: all 0.3s;" onclick="nextFeaturedQuote()">
+    <div style="font-size: 0.75em; color: var(--accent2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;">Featured Wisdom &middot; Click for more</div>
+    <div id="fq-text" style="font-size: 1.05em; line-height: 1.65; font-style: italic; margin-bottom: 12px;"></div>
+    <div id="fq-author" style="font-size: 0.85em; color: var(--text-dim); font-weight: 600;"></div>
+  </div>
+
+  <!-- Social Proof -->
+  <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+    <div style="flex:1; min-width: 120px; text-align: center; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;">
+      <div style="font-size: 1.5em; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">11</div>
+      <div style="font-size: 0.78em; color: var(--text-dim);">Expert Advisors</div>
+    </div>
+    <div style="flex:1; min-width: 120px; text-align: center; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;">
+      <div style="font-size: 1.5em; font-weight: 800; background: linear-gradient(135deg, var(--accent2), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">55+</div>
+      <div style="font-size: 0.78em; color: var(--text-dim);">Real Quotes</div>
+    </div>
+    <div style="flex:1; min-width: 120px; text-align: center; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;">
+      <div style="font-size: 1.5em; font-weight: 800; background: linear-gradient(135deg, var(--accent3), #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">8</div>
+      <div style="font-size: 0.78em; color: var(--text-dim);">Challenge Areas</div>
+    </div>
+    <div style="flex:1; min-width: 120px; text-align: center; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;">
+      <div style="font-size: 1.5em; font-weight: 800; background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">50</div>
+      <div style="font-size: 0.78em; color: var(--text-dim);">Podcast Episodes</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('advisor')">Get Advice</button>
+    <button class="tab" onclick="switchTab('explore')">Explore Wisdom</button>
+    <button class="tab" onclick="switchTab('reading')">Reading List</button>
+  </div>
+
+  <!-- ADVISOR PANEL -->
+  <div id="panel-advisor" class="panel active">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Your Role</label>
+        <select id="role-select">
+          <option value="pm">Product Manager</option>
+          <option value="founder">Founder / CEO</option>
+          <option value="engineer">Engineer</option>
+          <option value="designer">Designer</option>
+          <option value="growth">Growth / Marketing</option>
+          <option value="leader">Engineering / Product Leader</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Experience Level</label>
+        <select id="level-select">
+          <option value="early">Early Career (0-3 years)</option>
+          <option value="mid">Mid Career (3-8 years)</option>
+          <option value="senior">Senior (8-15 years)</option>
+          <option value="exec">Executive / C-Suite</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-title">What's your challenge?</div>
+    <div class="challenge-grid" id="challenge-grid"></div>
+
+    <button class="get-advice-btn" onclick="getAdvice()">Get Personalized Advice</button>
+
+    <div class="advice-container" id="advice-container"></div>
+  </div>
+
+  <!-- EXPLORE PANEL -->
+  <div id="panel-explore" class="panel">
+    <input type="text" class="search-box" id="search-box" placeholder="Search wisdom... (e.g. pricing, hiring, growth, AI, leadership)" oninput="filterWisdom()">
+    <div id="wisdom-list"></div>
+  </div>
+
+  <!-- READING LIST PANEL -->
+  <div id="panel-reading" class="panel">
+    <div class="section-title">Personalized Reading List</div>
+    <p style="color: var(--text-dim); margin-bottom: 20px; font-size: 0.9em;">Select a challenge in the "Get Advice" tab first, then come here for your curated episode guide.</p>
+    <div id="reading-list"></div>
+  </div>
+
+  <div class="footer">
+    Built with data from <a href="https://www.lennysdata.com" target="_blank">Lenny's Data</a> &middot;
+    <a href="https://www.lennyspodcast.com" target="_blank">Lenny's Podcast</a> &middot;
+    <a href="https://www.lennysnewsletter.com" target="_blank">Lenny's Newsletter</a><br>
+    Data from the free starter pack &middot; 50 podcast transcripts &middot; 10 newsletter posts
+  </div>
+</div>
+
+<script>
+// ==================== WISDOM DATABASE ====================
+const advisors = [
+  {
+    id: "marc-andreessen",
+    name: "Marc Andreessen",
+    role: "Co-founder, a16z & Netscape",
+    topics: ["AI", "Career", "Strategy", "Future of Work"],
+    avatar: "MA",
+    color: "#6c5ce7",
+    quotes: [
+      {
+        text: "AI is the philosopher's stone. We have a technology that transfers the most common thing in the world, which is sand, converted into the most rare thing in the world, which is thought.",
+        topic: "AI",
+        context: "On why this is the most historic moment in technology",
+        roles: ["pm","founder","engineer","designer","growth","leader"],
+        levels: ["early","mid","senior","exec"]
+      },
+      {
+        text: "Every coder now believes they can also be a product manager and a designer because they have AI. Every product manager thinks they can be a coder and a designer. Every designer knows they can be a product manager and a coder. They're actually all kind of correct.",
+        topic: "Career",
+        context: "The 'Mexican standoff' between PM, engineer, and designer roles in the AI era",
+        roles: ["pm","engineer","designer"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "The additive effect of being good at two things is more than double. The additive effect of being good at three things is more than triple. You become a super relevant specialist in the combination of the domains.",
+        topic: "Career",
+        context: "On becoming a super-empowered individual by combining PM + engineering + design skills",
+        roles: ["pm","engineer","designer","founder"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "People who really want to improve themselves and develop their career should be spending every spare hour, in my view, talking to AI, being like, 'All right, train me up.'",
+        topic: "AI",
+        context: "Advice for anyone looking to stay relevant in the AI era",
+        roles: ["pm","founder","engineer","designer","growth","leader"],
+        levels: ["early","mid"]
+      },
+      {
+        text: "AI is going to take people who are good at doing things and make them very good. But the really great people are becoming spectacularly great. My friends who are really good coders are like, 'I'm not twice as good, I'm 10 times as good.'",
+        topic: "AI",
+        context: "On the super-empowered individual and how AI amplifies existing skill",
+        roles: ["pm","founder","engineer","designer","growth","leader"],
+        levels: ["early","mid","senior","exec"]
+      },
+      {
+        text: "Everybody wants to talk about job loss, but really, what you want to look at is task loss. The job persists longer than the individual tasks.",
+        topic: "Future of Work",
+        context: "On reframing the AI job displacement narrative",
+        roles: ["pm","founder","leader"],
+        levels: ["mid","senior","exec"]
+      }
+    ]
+  },
+  {
+    id: "ben-horowitz",
+    name: "Ben Horowitz",
+    role: "Co-founder, a16z; Author of The Hard Thing About Hard Things",
+    topics: ["Leadership", "Founder Life", "Product Management", "Decision Making"],
+    avatar: "BH",
+    color: "#e74c3c",
+    quotes: [
+      {
+        text: "The worst thing that you do as a leader is you hesitate on the next decision. The thing that causes you to hesitate is both decisions are horrible.",
+        topic: "Leadership",
+        context: "On running toward fear rather than away from it as a leader",
+        roles: ["founder","leader","pm"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "The psychological muscle you have to build to be a great leader is to be able to look in the abyss and go, 'Okay, that way's slightly better. We're going to go that way.'",
+        topic: "Leadership",
+        context: "On making impossible decisions when both options are terrible",
+        roles: ["founder","leader"],
+        levels: ["senior","exec"]
+      },
+      {
+        text: "What I was trying to get out in Good Product Manager, Bad Product Manager was the job is fundamentally a leadership job. And it's a tricky leadership job because nobody is actually reporting to you.",
+        topic: "Product Management",
+        context: "On the true nature of the PM role as a leadership position",
+        roles: ["pm"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "It doesn't matter if you write a good spec or you have a good interview or you do this or do that. What matters is that the product works.",
+        topic: "Product Management",
+        context: "On what separates good PMs from bad PMs",
+        roles: ["pm","founder","designer"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "If everybody agrees with the decision, then you didn't add any value because they would've done that without you. The only value you ever add is when you make a decision that most people don't like.",
+        topic: "Leadership",
+        context: "On the real purpose of leadership in organizations",
+        roles: ["pm","founder","leader"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "The only reason to start a company is because you have an irrational desire to do so, because it's not worth the money.",
+        topic: "Founder Life",
+        context: "Quoting John Reed, CEO of Citigroup, on why not to start a company for money",
+        roles: ["founder"],
+        levels: ["early","mid"]
+      },
+      {
+        text: "Success is a series of small decisions. A lot of success is a small thing that's hard to do that doesn't seem to have a high impact, but it leads to the next small hard-to-do thing and eventually you get an outcome.",
+        topic: "Career",
+        context: "The pilot story - how plane crashes (and failures) are a series of small bad decisions",
+        roles: ["pm","founder","engineer","designer","growth","leader"],
+        levels: ["early","mid","senior","exec"]
+      }
+    ]
+  },
+  {
+    id: "elena-verna",
+    name: "Elena Verna",
+    role: "Head of Growth, Lovable (200M+ ARR in <1 year)",
+    topics: ["Growth", "PLG", "Marketing", "AI Companies"],
+    avatar: "EV",
+    color: "#10b981",
+    quotes: [
+      {
+        text: "Only 30 to 40% of what I've learned in the last 15 to 20 years of being in growth transfers here. I'm spending 95% innovating on growth, and only 5% on optimization.",
+        topic: "Growth",
+        context: "On how the growth playbook has fundamentally changed for AI companies",
+        roles: ["growth","pm","founder"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "The only way to create a word of mouth loop is just to blow their socks off when they actually experience your product.",
+        topic: "Growth",
+        context: "On Lovable's secret sauce for organic growth - make something lovable",
+        roles: ["pm","founder","growth","designer"],
+        levels: ["early","mid","senior","exec"]
+      },
+      {
+        text: "We don't optimize for revenue at all. Our revenue is an outcome of us just trying to get more people through the door, not us trying to optimize for revenue per user.",
+        topic: "Growth",
+        context: "Counter-intuitive growth strategy: focus on inputs, not revenue output",
+        roles: ["founder","growth","leader"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "Influencer marketing is 10 times bigger for us than paid social. Nobody knows what vibe coding is. But you watch 10 seconds of it and you go, 'Whew, that's new. Let me go give it a try.'",
+        topic: "Marketing",
+        context: "On why social/video content works so well for new categories",
+        roles: ["growth","founder","pm"],
+        levels: ["mid","senior"]
+      },
+      {
+        text: "If it's not lovable, we're not going to ship it. The best way to fix a bug at Lovable is to say, 'This is not lovable,' and everybody just jumps on it.",
+        topic: "Product Craft",
+        context: "On embedding brand into product culture",
+        roles: ["pm","designer","founder","leader"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "Every company has to recapture product-market fit every three months now. What you can do changes every month. So you constantly need to come back and see what has changed.",
+        topic: "Strategy",
+        context: "On the rapid pace of change in AI product categories",
+        roles: ["pm","founder","growth","leader"],
+        levels: ["mid","senior","exec"]
+      }
+    ]
+  },
+  {
+    id: "bret-taylor",
+    name: "Bret Taylor",
+    role: "CEO Sierra; Co-creator Google Maps; fmr CTO Meta, co-CEO Salesforce",
+    topics: ["Career Growth", "Product Strategy", "Agents", "Leadership"],
+    avatar: "BT",
+    color: "#3b82f6",
+    quotes: [
+      {
+        text: "What is the most impactful thing I could do today? Sometimes it's recruiting, sometimes it's product, sometimes it's engineering, sometimes it's sales.",
+        topic: "Career Growth",
+        context: "The daily question from Sheryl Sandberg's mentorship that changed his career trajectory",
+        roles: ["pm","founder","leader","engineer","designer"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "The whole market is going to go towards agents. The whole market is going to go towards outcomes-based pricing. It's just so obviously the correct way to build and sell software.",
+        topic: "AI & Agents",
+        context: "On where the entire software market is headed",
+        roles: ["pm","founder","engineer","growth"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "If you're a great engineer, the answer to almost every problem is engineering. If you're a product designer, it's the redesign. Be self-aware that you will naturally pick the thing that is your strength as a solution to more problems than it deserves.",
+        topic: "Leadership",
+        context: "On the single-issue voter problem for founders and leaders",
+        roles: ["pm","founder","engineer","designer","leader"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "Rather than literally digitizing what came before, if you can create an entirely new experience, it answers the question for a new customer: why should I give this the time of day?",
+        topic: "Product Strategy",
+        context: "The lesson from Google Maps - don't just digitize the Yellow Pages",
+        roles: ["pm","founder","designer","engineer"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "I probably credit Sheryl Sandberg for really changing the way I approach new jobs. She gave me feedback that was very direct and uncomfortable, but I knew she cared about me. The next day I realized she was right.",
+        topic: "Career Growth",
+        context: "On how great mentorship changes career trajectories",
+        roles: ["pm","founder","engineer","designer","growth","leader"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "Have a really flexible view of your own identity. I think of myself as a builder. Companies are one of the most effective ways to build products.",
+        topic: "Career Growth",
+        context: "On not being limited by your job title and embracing multiple roles",
+        roles: ["pm","founder","engineer","designer"],
+        levels: ["early","mid","senior"]
+      }
+    ]
+  },
+  {
+    id: "molly-graham",
+    name: "Molly Graham",
+    role: "Founder Glue Club; fmr Facebook, Google, CZI",
+    topics: ["Leadership", "Scaling", "Career Growth", "Culture"],
+    avatar: "MG",
+    color: "#f59e0b",
+    quotes: [
+      {
+        text: "You have to grow as fast as your company is growing if you really want to take advantage. Both learning to give away what you've gotten good at and move on to the next shiny pile of Legos.",
+        topic: "Career Growth",
+        context: "The famous 'Give Away Your Legos' framework for scaling careers",
+        roles: ["pm","founder","engineer","designer","growth","leader"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "At Facebook, I was literally giving away my job every three weeks. I was constantly rehiring myself because you have to grow as fast as your company.",
+        topic: "Scaling",
+        context: "On surviving and thriving in hypergrowth environments",
+        roles: ["pm","founder","leader","growth"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "The much more fun careers are like jumping off cliffs. You do fall, but then you climb out way beyond where the stairs could ever get you.",
+        topic: "Career Growth",
+        context: "Chamath's J-Curve vs Stairs framework for ambitious careers",
+        roles: ["pm","founder","engineer","designer","growth","leader"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "80% of the culture of a company is literally defined by the personality of the founder. Our job as operators is to help articulate the culture that they're creating.",
+        topic: "Culture",
+        context: "Comparing Google (PhD paradise) vs Facebook (hacker dorm room) cultures",
+        roles: ["founder","leader","pm"],
+        levels: ["senior","exec"]
+      },
+      {
+        text: "I externalized all these emotions that come with change into a little tiny monster. I named my monster Bob. Bob's job is to make me the worst version of myself. Your job is to let Bob do his thing, but not act on the emotions.",
+        topic: "Leadership",
+        context: "The 'Bob' framework for managing destructive emotions during change",
+        roles: ["pm","founder","engineer","designer","growth","leader"],
+        levels: ["early","mid","senior","exec"]
+      },
+      {
+        text: "Anything that lasts longer than two weeks is actually something you should pay attention to. Everything else is just Bob.",
+        topic: "Leadership",
+        context: "The two-week rule for distinguishing real concerns from emotional reactions",
+        roles: ["pm","founder","leader"],
+        levels: ["mid","senior","exec"]
+      }
+    ]
+  },
+  {
+    id: "melanie-perkins",
+    name: "Melanie Perkins",
+    role: "CEO & Co-founder, Canva ($42B valuation)",
+    topics: ["Vision", "Startup Building", "Persistence", "Product Strategy"],
+    avatar: "MP",
+    color: "#ec4899",
+    quotes: [
+      {
+        text: "The thing I love about a crazy big goal is that you feel completely inadequate before it. You want to work really hard to will it into existence.",
+        topic: "Vision",
+        context: "On Canva's core value of 'Crazy Big Goals'",
+        roles: ["founder","pm","leader"],
+        levels: ["early","mid","senior","exec"]
+      },
+      {
+        text: "I thought the investors were wrong, frankly. Investors gave helpful feedback, often in the form of rejection. I'd add a new page in my pitch deck addressing each concern.",
+        topic: "Persistence",
+        context: "On being rejected by 100+ investors and turning each rejection into a better pitch",
+        roles: ["founder"],
+        levels: ["early","mid"]
+      },
+      {
+        text: "Column A is looking at the bricks around you and stacking them. Column B is dreaming of the perfect future and working backwards. Most planning is Column A. The biggest companies are built with Column B thinking.",
+        topic: "Strategy",
+        context: "The Column B framework for visionary company building",
+        roles: ["founder","pm","leader"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "You want a ladder that goes all the way to the moon. Then you want rungs that work their way up step by step. It doesn't matter how small that first step is if it's working toward that future.",
+        topic: "Startup Building",
+        context: "On connecting crazy big vision with microscopic daily execution",
+        roles: ["founder","pm"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "Every idea starts in the chaos side, and then you have to work all the way to the other side, which is clarity. That very first step at the far end of chaos is embarrassing because you don't have mastery.",
+        topic: "Product Strategy",
+        context: "The 'Chaos to Clarity' framework Canva uses for every project",
+        roles: ["pm","designer","founder"],
+        levels: ["early","mid","senior"]
+      }
+    ]
+  },
+  {
+    id: "stewart-butterfield",
+    name: "Stewart Butterfield",
+    role: "Founder of Slack and Flickr",
+    topics: ["Product Craft", "Design", "Pivoting", "User Experience"],
+    avatar: "SB",
+    color: "#8b5cf6",
+    quotes: [
+      {
+        text: "I feel like what we have right now is just a giant piece of shit. If you can't see almost limitless opportunities to improve, then you shouldn't be designing the product.",
+        topic: "Product Craft",
+        context: "Said publicly about Slack in 2014, the year it launched - on maintaining discontent",
+        roles: ["pm","designer","founder","engineer"],
+        levels: ["early","mid","senior","exec"]
+      },
+      {
+        text: "In the long run, the measure of our success will be the amount of value that we create for customers. There's no substitute for actually having created it.",
+        topic: "Product Strategy",
+        context: "A mantra he made the entire Slack company chant at all-hands meetings",
+        roles: ["pm","founder","growth","designer","engineer","leader"],
+        levels: ["early","mid","senior","exec"]
+      },
+      {
+        text: "If your software stops me and asks me to make a decision and I don't understand it, you make me feel stupid. Focus on how can I prevent people from having to think in order to use my software.",
+        topic: "Design",
+        context: "On why reducing friction isn't the goal - comprehension is",
+        roles: ["pm","designer","engineer"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "The decision to pivot is about: have you exhausted the possibilities? Creating the distance so that you can make an intellectual rational decision rather than an emotional one is essential. Because pivoting is humiliating.",
+        topic: "Pivoting",
+        context: "On pivoting twice - from Game Neverending to Flickr, and from Glitch to Slack",
+        roles: ["founder","pm"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "There's a threshold where effort produces enormous value, then continued investment doesn't pay off. The question is: are we on the first shallow part of the curve, or the second?",
+        topic: "Product Craft",
+        context: "The Utility Curve framework for deciding where to invest product resources",
+        roles: ["pm","designer","engineer","leader"],
+        levels: ["mid","senior"]
+      }
+    ]
+  },
+  {
+    id: "jason-cohen",
+    name: "Jason Cohen",
+    role: "4x Founder, 2x Unicorn (WP Engine)",
+    topics: ["Growth", "Pricing", "Retention", "Strategy"],
+    avatar: "JC",
+    color: "#14b8a6",
+    quotes: [
+      {
+        text: "Think about the gauntlet customers went through to get to your product. They found you, didn't bounce off the homepage, weren't scared by pricing, had budget, and bought it. After all that, they're leaving? That's terrible.",
+        topic: "Retention",
+        context: "First question in the 5-step framework for diagnosing stalled growth",
+        roles: ["pm","founder","growth"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "Your prices are way too low because you just guessed and haven't changed them. A company with 400 million in revenue sees a product that's $2/month and thinks: that can't be good enough.",
+        topic: "Pricing",
+        context: "Step 2 of the stalled growth framework - pricing signals value",
+        roles: ["pm","founder","growth"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "Do you know right now which channels are saturated and which aren't? You can't just rely on marketing forever. Just adding one little feature and hoping we can flog AdWords is not going to work.",
+        topic: "Growth",
+        context: "On channel saturation as a hidden cause of stalled growth",
+        roles: ["growth","founder","pm"],
+        levels: ["mid","senior"]
+      },
+      {
+        text: "The last question is: do you need to grow? 'If you're not growing, you're dying' - is that true or is that the kind of thing investors use to make founders try to grow even when they shouldn't?",
+        topic: "Strategy",
+        context: "The contrarian final question in the stalled growth framework",
+        roles: ["founder","leader"],
+        levels: ["senior","exec"]
+      }
+    ]
+  },
+  {
+    id: "dan-shipper",
+    name: "Dan Shipper",
+    role: "CEO, Every (5 products, 100% AI-written code)",
+    topics: ["AI Native", "Vibe Coding", "Startup Building"],
+    avatar: "DS",
+    color: "#f97316",
+    quotes: [
+      {
+        text: "We have 5 products, 7-figure revenue, and 100% AI-written code. The AI-native startup looks completely different from what came before.",
+        topic: "AI Native",
+        context: "On building an entire company where all code is written by AI",
+        roles: ["founder","engineer","pm"],
+        levels: ["early","mid","senior"]
+      }
+    ]
+  },
+  {
+    id: "jason-lemkin",
+    name: "Jason Lemkin",
+    role: "Founder, SaaStr; fmr CEO EchoSign (sold to Adobe)",
+    topics: ["Sales", "B2B", "Hiring", "SaaS"],
+    avatar: "JL",
+    color: "#ef4444",
+    quotes: [
+      {
+        text: "We're not really selling in B2B, we're solving problems. Our job as sales reps in SaaS is not to sell a used car. Let me help you. I've spent four calls answering all your questions.",
+        topic: "Sales",
+        context: "On the right mindset for B2B sales - problem solving, not pushing",
+        roles: ["founder","growth","pm"],
+        levels: ["mid","senior","exec"]
+      },
+      {
+        text: "As a founder, even if you don't like sales, customers love to talk to the CEO. Almost all founders are A+ middlers. You're really good at the middle part of sales - the conversation.",
+        topic: "Sales",
+        context: "On why founders are better at sales than they think",
+        roles: ["founder"],
+        levels: ["early","mid"]
+      },
+      {
+        text: "Be honest about the motion it takes to get those first 10-15 customers. If you say 'I don't like sales, so I'm going to do PLG' when customers clearly need a sales motion, you'll fail.",
+        topic: "B2B",
+        context: "On being honest about whether you need sales vs pure PLG",
+        roles: ["founder","pm","growth"],
+        levels: ["early","mid","senior"]
+      }
+    ]
+  },
+  {
+    id: "duolingo",
+    name: "Duolingo Growth Team",
+    role: "From Lenny's Newsletter: How Duolingo Reignited Growth",
+    topics: ["Growth", "Gamification", "Retention", "Data Models"],
+    avatar: "DG",
+    color: "#22c55e",
+    quotes: [
+      {
+        text: "We borrowed successful features from other products the wrong way. We failed to account for how a change in context can impact success. Now I ask: Why is this working there? Will it translate? What adaptations are necessary?",
+        topic: "Growth",
+        context: "After copying Gardenscapes game mechanics failed, then Uber referrals failed",
+        roles: ["pm","growth","designer"],
+        levels: ["early","mid","senior"]
+      },
+      {
+        text: "CURR (Current User Retention Rate): The chance a user comes back this week if they came each of the past two weeks. This became our North Star metric that drove 4.5x DAU growth.",
+        topic: "Data Models",
+        context: "The retention model borrowed from Zynga and MyFitnessPal that transformed Duolingo",
+        roles: ["pm","growth","leader"],
+        levels: ["mid","senior"]
+      },
+      {
+        text: "We used data to find our North Star metric, then focused on leaderboards, push notifications, and streaks. These together helped us grow DAU by 4.5x over four years.",
+        topic: "Growth",
+        context: "The three key features that reignited Duolingo's growth",
+        roles: ["pm","growth","designer"],
+        levels: ["early","mid","senior"]
+      }
+    ]
+  }
+];
+
+const challenges = [
+  { id: "stalled-growth", label: "My product's growth has stalled", icon: "📉", topics: ["Growth","Retention","Marketing","Data Models"] },
+  { id: "ai-career", label: "Navigating my career in the AI era", icon: "🤖", topics: ["AI","Career","Future of Work","AI Native","AI & Agents"] },
+  { id: "leadership", label: "Becoming a better leader", icon: "👑", topics: ["Leadership","Career Growth","Culture","Scaling","Decision Making"] },
+  { id: "pricing", label: "Getting pricing right", icon: "💰", topics: ["Pricing","Strategy","B2B","Growth"] },
+  { id: "starting-up", label: "Starting or scaling a company", icon: "🚀", topics: ["Startup Building","Founder Life","Vision","Persistence","Sales"] },
+  { id: "product-craft", label: "Building better products", icon: "🔨", topics: ["Product Craft","Product Strategy","Design","Product Management","User Experience"] },
+  { id: "growth-tactics", label: "Finding new growth levers", icon: "📈", topics: ["Growth","PLG","Marketing","Gamification"] },
+  { id: "pivoting", label: "Pivoting or major strategic shift", icon: "🔄", topics: ["Pivoting","Strategy","Decision Making","Founder Life"] }
+];
+
+let selectedChallenge = null;
+
+// ==================== RENDER ====================
+function init() {
+  renderChallenges();
+  renderWisdom();
+}
+
+function renderChallenges() {
+  const grid = document.getElementById('challenge-grid');
+  grid.innerHTML = challenges.map(c => `
+    <button class="challenge-btn ${selectedChallenge === c.id ? 'selected' : ''}" onclick="selectChallenge('${c.id}')">
+      <span class="icon">${c.icon}</span>
+      ${c.label}
+    </button>
+  `).join('');
+}
+
+function selectChallenge(id) {
+  selectedChallenge = id;
+  renderChallenges();
+}
+
+function getAdvice() {
+  if (!selectedChallenge) {
+    alert('Please select a challenge first!');
+    return;
+  }
+  const role = document.getElementById('role-select').value;
+  const level = document.getElementById('level-select').value;
+  const challenge = challenges.find(c => c.id === selectedChallenge);
+  const relevantTopics = challenge.topics;
+
+  let allQuotes = [];
+  advisors.forEach(adv => {
+    adv.quotes.forEach(q => {
+      const topicMatch = relevantTopics.some(t => q.topic.toLowerCase().includes(t.toLowerCase()) || t.toLowerCase().includes(q.topic.toLowerCase()));
+      const roleMatch = q.roles.includes(role);
+      const levelMatch = q.levels.includes(level);
+      let score = 0;
+      if (topicMatch) score += 3;
+      if (roleMatch) score += 2;
+      if (levelMatch) score += 1;
+      if (score >= 3) {
+        allQuotes.push({ ...q, advisor: adv, score });
+      }
+    });
+  });
+
+  // Sort by score, then shuffle within same score for variety
+  allQuotes.sort((a, b) => b.score - a.score);
+
+  // Take top quotes, max 2 per advisor
+  const advCount = {};
+  const selected = [];
+  for (const q of allQuotes) {
+    const aid = q.advisor.id;
+    advCount[aid] = (advCount[aid] || 0);
+    if (advCount[aid] < 2 && selected.length < 6) {
+      selected.push(q);
+      advCount[aid]++;
+    }
+  }
+
+  const container = document.getElementById('advice-container');
+  if (selected.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 40px;">No specific advice found for this combination. Try a different challenge or role.</p>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="section-title" style="margin-top: 24px;">Advice for You</div>
+    ${selected.map((q, i) => `
+      <div class="advice-card" style="animation-delay: ${i * 0.1}s">
+        <div class="guest-header">
+          <div class="guest-avatar" style="background: linear-gradient(135deg, ${q.advisor.color}, ${q.advisor.color}dd)">${q.advisor.avatar}</div>
+          <div>
+            <div class="guest-name">${q.advisor.name}</div>
+            <div class="guest-title">${q.advisor.role}</div>
+          </div>
+        </div>
+        <blockquote>"${q.text}"</blockquote>
+        <div class="context">${q.context}</div>
+      </div>
+    `).join('')}
+  `;
+
+  // Also build reading list
+  buildReadingList(challenge, role, level);
+}
+
+function buildReadingList(challenge, role, level) {
+  const episodes = [
+    { title: "Marc Andreessen: The real AI boom hasn't even started yet", match: "AI, Career, Future of Work", topics: ["AI","Career","Future of Work"], desc: "Why AI is the philosopher's stone, the future of PM/engineer/designer roles, and how to become a super-empowered individual." },
+    { title: "Ben Horowitz: Why founders fail and why you need to run toward fear", match: "Leadership, Founder Life, Decision Making", topics: ["Leadership","Founder Life","Decision Making","Product Management"], desc: "Running toward fear, making impossible decisions, Good PM/Bad PM, and why the only reason to start a company is irrational desire." },
+    { title: "Elena Verna: How the growth playbook changed for AI companies", match: "Growth, PLG, Marketing", topics: ["Growth","PLG","Marketing","AI"], desc: "Why 60% of her growth playbook is obsolete, the power of building in public, and how Lovable hit $200M ARR." },
+    { title: "Bret Taylor: The future of careers, coding, agents, and more", match: "Career Growth, Product Strategy, AI & Agents", topics: ["Career Growth","Product Strategy","AI","Leadership"], desc: "What is the most impactful thing I could do today, Google Maps origin story, and the single-issue voter problem." },
+    { title: "Molly Graham: Frameworks for leading through chaos, change, and scale", match: "Leadership, Scaling, Career Growth", topics: ["Leadership","Scaling","Career Growth","Culture"], desc: "Give Away Your Legos, the J-Curve vs Stairs, managing your monster Bob, and the two-week rule." },
+    { title: "Melanie Perkins: How she built Canva from nothing to $42B", match: "Vision, Startup Building, Persistence", topics: ["Vision","Startup Building","Persistence","Strategy"], desc: "Column B thinking, Crazy Big Goals, rejected by 100+ investors, and the Chaos to Clarity framework." },
+    { title: "Stewart Butterfield: Mental models for building products people love", match: "Product Craft, Design, User Experience", topics: ["Product Craft","Design","User Experience","Pivoting","Strategy"], desc: "Utility curves, divine discontent, don't make users think, and lessons from pivoting twice." },
+    { title: "Jason Cohen: 5 questions when your product stops growing", match: "Growth, Pricing, Retention", topics: ["Growth","Pricing","Retention","Strategy"], desc: "Logo retention, pricing signals, channel saturation, NRR, and the contrarian question: do you even need to grow?" },
+    { title: "Jason Lemkin: Building your sales team in the AI era", match: "Sales, B2B, Hiring", topics: ["Sales","B2B","Hiring","Founder Life"], desc: "Why founders are A+ middlers, being honest about your sales motion, and when to hire your first salesperson." },
+    { title: "How Duolingo Reignited User Growth (Newsletter)", match: "Growth, Gamification, Retention, Data Models", topics: ["Growth","Gamification","Retention","Data Models"], desc: "CURR metric, leaderboards, streaks, push notifications, and the story of 4.5x DAU growth." }
+  ];
+
+  const relevantTopics = challenge.topics;
+  const scored = episodes.map(ep => {
+    let score = 0;
+    ep.topics.forEach(t => {
+      if (relevantTopics.some(rt => rt.toLowerCase() === t.toLowerCase())) score += 2;
+    });
+    return { ...ep, score };
+  }).filter(e => e.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
+
+  const list = document.getElementById('reading-list');
+  list.innerHTML = scored.map((ep, i) => `
+    <div class="reading-item">
+      <div class="num">${i + 1}</div>
+      <div class="info">
+        <div class="title">${ep.title}</div>
+        <div class="desc">${ep.desc}</div>
+        <div class="match">Relevant to: ${ep.match}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderWisdom() {
+  const list = document.getElementById('wisdom-list');
+  let allQuotes = [];
+  advisors.forEach(adv => {
+    adv.quotes.forEach(q => {
+      allQuotes.push({ ...q, advisor: adv });
+    });
+  });
+  renderWisdomList(allQuotes);
+}
+
+function filterWisdom() {
+  const query = document.getElementById('search-box').value.toLowerCase();
+  let allQuotes = [];
+  advisors.forEach(adv => {
+    adv.quotes.forEach(q => {
+      allQuotes.push({ ...q, advisor: adv });
+    });
+  });
+  if (query) {
+    allQuotes = allQuotes.filter(q =>
+      q.text.toLowerCase().includes(query) ||
+      q.topic.toLowerCase().includes(query) ||
+      q.context.toLowerCase().includes(query) ||
+      q.advisor.name.toLowerCase().includes(query)
+    );
+  }
+  renderWisdomList(allQuotes);
+}
+
+function renderWisdomList(quotes) {
+  const list = document.getElementById('wisdom-list');
+  list.innerHTML = quotes.map(q => `
+    <div class="wisdom-card">
+      <div class="w-topic">${q.topic}</div>
+      <div class="w-quote">"${q.text}"</div>
+      <div class="w-author">-- ${q.advisor.name}, ${q.advisor.role}</div>
+    </div>
+  `).join('');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// Featured quotes
+const featuredQuotes = [
+  { text: "AI is the philosopher's stone. We have a technology that transfers the most common thing in the world, which is sand, converted into the most rare thing in the world, which is thought.", author: "Marc Andreessen, Co-founder a16z" },
+  { text: "The worst thing you do as a leader is hesitate. The psychological muscle you have to build is to look in the abyss and go, 'Okay, that way's slightly better. We're going that way.'", author: "Ben Horowitz, Co-founder a16z" },
+  { text: "You have to grow as fast as your company is growing. Both learning to give away what you've gotten good at and move on to the next shiny pile of Legos.", author: "Molly Graham, fmr Facebook & Google" },
+  { text: "The only way to create a word of mouth loop is just to blow their socks off.", author: "Elena Verna, Head of Growth at Lovable" },
+  { text: "What is the most impactful thing I could do today? Sometimes it's recruiting, sometimes product, sometimes sales.", author: "Bret Taylor, CEO Sierra; fmr CTO Meta" },
+  { text: "The thing I love about a crazy big goal is that you feel completely inadequate before it. You want to work really hard to will it into existence.", author: "Melanie Perkins, CEO Canva" },
+  { text: "If you can't see almost limitless opportunities to improve, then you shouldn't be designing the product.", author: "Stewart Butterfield, Founder of Slack" },
+  { text: "Think about the gauntlet customers went through to get to your product. After all that, they're leaving? That's terrible.", author: "Jason Cohen, 2x Unicorn Founder" }
+];
+let fqIndex = 0;
+function showFeaturedQuote() {
+  const q = featuredQuotes[fqIndex];
+  document.getElementById('fq-text').textContent = '"' + q.text + '"';
+  document.getElementById('fq-author').textContent = '-- ' + q.author;
+}
+function nextFeaturedQuote() {
+  fqIndex = (fqIndex + 1) % featuredQuotes.length;
+  const el = document.getElementById('featured-quote');
+  el.style.opacity = '0';
+  setTimeout(() => { showFeaturedQuote(); el.style.opacity = '1'; }, 200);
+}
+showFeaturedQuote();
+setInterval(nextFeaturedQuote, 8000);
+
+init();
+</script>
+</body>
+</html>

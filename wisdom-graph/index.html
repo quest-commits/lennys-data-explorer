@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lenny's Wisdom Graph</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0a14;--surface:#12121f;--surface2:#1a1a2e;--border:#2a2a44;
+    --text:#e0e0f0;--text2:#8888aa;--accent:#6c5ce7;--accent2:#a29bfe;
+    --glow:#6c5ce7;--green:#00cec9;--orange:#fdcb6e;--pink:#fd79a8;
+    --blue:#74b9ff;--red:#ff7675;--yellow:#ffeaa7;
+  }
+  html,body{height:100%;overflow:hidden;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text)}
+  body{display:flex;flex-direction:column}
+
+  /* Header */
+  .header{display:flex;align-items:center;gap:16px;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--border);z-index:100;flex-shrink:0}
+  .logo{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+  .logo span{font-weight:400;opacity:.7}
+  .search-box{flex:1;max-width:480px;position:relative}
+  .search-box input{width:100%;padding:8px 16px 8px 36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;outline:none;transition:border .2s}
+  .search-box input:focus{border-color:var(--accent)}
+  .search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text2)}
+  .stats{font-size:12px;color:var(--text2);white-space:nowrap;margin-left:auto}
+  .stats b{color:var(--accent2)}
+
+  /* Main layout */
+  .main{display:flex;flex:1;overflow:hidden}
+
+  /* Sidebar filters */
+  .sidebar{width:260px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:16px;display:flex;flex-direction:column;gap:16px}
+  .sidebar h3{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);margin-bottom:8px}
+  .filter-group{display:flex;flex-direction:column;gap:4px}
+  .filter-btn{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;border:none;background:transparent;color:var(--text);font-size:13px;cursor:pointer;text-align:left;transition:background .15s}
+  .filter-btn:hover{background:var(--surface2)}
+  .filter-btn.active{background:var(--accent);color:#fff}
+  .filter-btn .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .filter-btn .count{margin-left:auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums}
+  .filter-btn.active .count{color:rgba(255,255,255,.7)}
+  .view-toggle{display:flex;gap:4px;background:var(--surface2);border-radius:8px;padding:3px}
+  .view-btn{flex:1;padding:6px;border:none;border-radius:6px;background:transparent;color:var(--text2);font-size:12px;cursor:pointer;transition:all .15s}
+  .view-btn.active{background:var(--accent);color:#fff}
+  .legend{display:flex;flex-direction:column;gap:4px;padding-top:8px;border-top:1px solid var(--border)}
+  .legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+  .legend-item .dot{width:10px;height:10px;border-radius:50%}
+
+  /* Canvas area */
+  .canvas-wrap{flex:1;position:relative;overflow:hidden}
+  canvas{display:block;width:100%;height:100%}
+
+  /* Detail panel */
+  .detail{position:absolute;top:0;right:0;width:380px;height:100%;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;transform:translateX(100%);transition:transform .3s ease;z-index:50;padding:24px}
+  .detail.open{transform:translateX(0)}
+  .detail-close{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+  .detail h2{font-size:18px;font-weight:700;margin-bottom:4px;padding-right:36px}
+  .detail .type-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+  .detail .desc{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:16px}
+  .detail h4{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin:16px 0 8px}
+  .detail .wisdom-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;font-size:13px;line-height:1.5;color:var(--text)}
+  .detail .wisdom-card .source{font-size:11px;color:var(--text2);margin-top:6px}
+  .detail .conn-list{display:flex;flex-direction:column;gap:4px}
+  .detail .conn-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;background:var(--surface2);cursor:pointer;transition:background .15s;font-size:13px}
+  .detail .conn-item:hover{background:var(--border)}
+  .detail .conn-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+  /* Tooltip */
+  .tooltip{position:absolute;pointer-events:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;max-width:280px;z-index:200;opacity:0;transition:opacity .15s;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+  .tooltip.show{opacity:1}
+  .tooltip .tt-title{font-weight:600;margin-bottom:2px}
+  .tooltip .tt-type{font-size:11px;color:var(--text2)}
+
+  /* Mobile */
+  @media(max-width:900px){
+    .sidebar{display:none}
+    .detail{width:100%}
+    .stats{display:none}
+  }
+  @media(max-width:600px){
+    .header{padding:8px 12px;gap:8px}
+    .logo{font-size:16px}
+    .detail{padding:16px}
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Lenny's Wisdom Graph <span>| Interactive Knowledge Map</span></div>
+  <div class="search-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="searchInput" placeholder="Search guests, topics, frameworks...">
+  </div>
+  <div class="stats"><b id="nodeCount">0</b> nodes &middot; <b id="edgeCount">0</b> connections</div>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar">
+    <div>
+      <h3>View Mode</h3>
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="all">All</button>
+        <button class="view-btn" data-view="guests">Guests</button>
+        <button class="view-btn" data-view="topics">Topics</button>
+        <button class="view-btn" data-view="frameworks">Ideas</button>
+      </div>
+    </div>
+    <div>
+      <h3>Topics</h3>
+      <div class="filter-group" id="topicFilters"></div>
+    </div>
+    <div class="legend">
+      <h3 style="margin-bottom:8px">Legend</h3>
+      <div class="legend-item"><div class="dot" style="background:#6c5ce7"></div> Guest / Speaker</div>
+      <div class="legend-item"><div class="dot" style="background:#00cec9"></div> Topic / Theme</div>
+      <div class="legend-item"><div class="dot" style="background:#fdcb6e"></div> Framework / Mental Model</div>
+      <div class="legend-item"><div class="dot" style="background:#fd79a8"></div> Tactical Insight</div>
+      <div class="legend-item"><div class="dot" style="background:#74b9ff"></div> Newsletter Concept</div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="graphCanvas"></canvas>
+    <div class="tooltip" id="tooltip"><div class="tt-title"></div><div class="tt-type"></div></div>
+    <div class="detail" id="detailPanel">
+      <button class="detail-close" id="detailClose">&times;</button>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA: Real frameworks, insights, and connections extracted from
+// 12+ podcast transcripts and 3+ newsletters
+// ============================================================
+const DATA = {
+  nodes: [
+    // GUESTS (type: guest)
+    {id:"brian-halligan",label:"Brian Halligan",type:"guest",color:"#6c5ce7",desc:"Co-founder of HubSpot, Sequoia CEO coach. Coaches fastest-growing founders on scaling."},
+    {id:"jason-cohen",label:"Jason Cohen",type:"guest",color:"#6c5ce7",desc:"2x unicorn founder (WP Engine, Smart Bear). Expert on diagnosing stalled growth."},
+    {id:"molly-graham",label:"Molly Graham",type:"guest",color:"#6c5ce7",desc:"Worked with Zuckerberg, Sheryl Sandberg, Bret Taylor. Leads Glue Club for leaders at scale."},
+    {id:"stewart-butterfield",label:"Stewart Butterfield",type:"guest",color:"#6c5ce7",desc:"Co-founder of Slack and Flickr. Pioneer of consumerized B2B SaaS."},
+    {id:"marc-andreessen",label:"Marc Andreessen",type:"guest",color:"#6c5ce7",desc:"Co-founder of Netscape and a16z. Investor and technologist on AI's transformative potential."},
+    {id:"ben-horowitz",label:"Ben Horowitz",type:"guest",color:"#6c5ce7",desc:"Co-founder of a16z. Author of The Hard Thing About Hard Things. Invested in $46B+ outcomes."},
+    {id:"melanie-perkins",label:"Melanie Perkins",type:"guest",color:"#6c5ce7",desc:"Founder and CEO of Canva ($42B). Pitched 100+ investors who all said no before getting funded."},
+    {id:"dr-becky-kennedy",label:"Dr. Becky Kennedy",type:"guest",color:"#6c5ce7",desc:"Child psychologist applying behavioral frameworks to leadership and working with difficult adults."},
+    {id:"matt-lemay",label:"Matt LeMay",type:"guest",color:"#6c5ce7",desc:"Product consultant. Author on impact-driven product management and escaping the death spiral."},
+    {id:"elena-verna",label:"Elena Verna",type:"guest",color:"#6c5ce7",desc:"Head of Growth at Lovable (200M+ ARR). Expert on growth loops and reinvention vs optimization."},
+    {id:"grant-lee",label:"Grant Lee",type:"guest",color:"#6c5ce7",desc:"CEO & co-founder of Gamma ($100M ARR, $2B valuation). Master of PLG and founder-led marketing."},
+    {id:"madhavan-ramanujam",label:"Madhavan Ramanujam",type:"guest",color:"#6c5ce7",desc:"Author of Monetizing Innovation. Senior Partner at Simon-Kucher. Premier pricing strategist."},
+    {id:"nick-turley",label:"Nick Turley",type:"guest",color:"#6c5ce7",desc:"Head of ChatGPT at OpenAI. Took it from hackathon project to 700M+ weekly users."},
+    {id:"jen-abel",label:"Jen Abel",type:"guest",color:"#6c5ce7",desc:"Co-founder of Jellyfish. Expert on founder-led sales and zero-to-one enterprise sales."},
+    {id:"dr-fei-fei-li",label:"Dr. Fei-Fei Li",type:"guest",color:"#6c5ce7",desc:"The Godmother of AI. Stanford professor. Pioneer in computer vision and world models."},
+    {id:"chip-huyen",label:"Chip Huyen",type:"guest",color:"#6c5ce7",desc:"AI engineering expert (Nvidia, Stanford, Netflix). Author on AI systems and ML engineering."},
+    {id:"bret-taylor",label:"Bret Taylor",type:"guest",color:"#6c5ce7",desc:"Invented the Like button, built Google Maps, saved OpenAI as board chair. Sierra AI co-founder."},
+    {id:"dan-shipper",label:"Dan Shipper",type:"guest",color:"#6c5ce7",desc:"CEO of Every. Running 5 AI-native products with 100% AI-written code and 7-figure revenue."},
+
+    // TOPICS (type: topic)
+    {id:"t-growth",label:"Growth & Retention",type:"topic",color:"#00cec9",desc:"Strategies for driving sustainable user growth, retention loops, and avoiding vanity metrics."},
+    {id:"t-leadership",label:"Leadership & Culture",type:"topic",color:"#00cec9",desc:"How to lead teams through chaos, build culture, and make difficult decisions under pressure."},
+    {id:"t-ai",label:"AI Product Building",type:"topic",color:"#00cec9",desc:"Building products with AI, from evals to agents to restructuring orgs for AI-native workflows."},
+    {id:"t-pricing",label:"Pricing & Monetization",type:"topic",color:"#00cec9",desc:"Pricing strategy, willingness to pay, and how to avoid the four types of monetization failure."},
+    {id:"t-pmf",label:"Product-Market Fit",type:"topic",color:"#00cec9",desc:"Finding, recognizing, and sustaining product-market fit. Knowing when you have it vs faking it."},
+    {id:"t-sales",label:"Sales & GTM",type:"topic",color:"#00cec9",desc:"Go-to-market strategy, founder-led sales, enterprise sales cycles, and outbound playbooks."},
+    {id:"t-startup",label:"Startup Building",type:"topic",color:"#00cec9",desc:"Founding, fundraising, scaling from 0 to 1, and the psychology of being a founder-CEO."},
+    {id:"t-product",label:"Product Craft",type:"topic",color:"#00cec9",desc:"Product management skills, frameworks for prioritization, and building products users love."},
+    {id:"t-psychology",label:"Psychology & Behavior",type:"topic",color:"#00cec9",desc:"Understanding human behavior, motivation, and applying psychological insights to products and teams."},
+
+    // FRAMEWORKS (type: framework)
+    {id:"f-give-away-legos",label:"Give Away Your Legos",type:"framework",color:"#fdcb6e",desc:"As your company scales, you must give away what you've gotten good at and move on to the next challenge. Growth means constantly letting go of your current role. -- Molly Graham"},
+    {id:"f-j-curve-stairs",label:"J-Curve vs Stairs",type:"framework",color:"#fdcb6e",desc:"Career growth isn't linear stairs -- it follows J-curves. You dip down when taking on new challenges before rising higher. Embrace the dip as a sign of growth. -- Molly Graham"},
+    {id:"f-5-questions-growth",label:"5 Questions for Stalled Growth",type:"framework",color:"#fdcb6e",desc:"Jason Cohen's diagnostic: 1) Are customers leaving? 2) Is pricing too low? 3) What's your NRR? 4) Are marketing channels working? 5) Is the target market right? -- Jason Cohen"},
+    {id:"f-price-as-measure",label:"Price Is a Measure of Value",type:"framework",color:"#fdcb6e",desc:"Price isn't a dollar figure -- it's a measure, like liters measure volume. Price measures willingness to pay. Test WTP before building, not after. -- Madhavan Ramanujam"},
+    {id:"f-four-monetization-fails",label:"4 Types of Monetization Failure",type:"framework",color:"#fdcb6e",desc:"Feature shocks (overbuilt), minivations (underbuilt), hidden gems (under-marketed), undead (no one wants). Most products fail in monetization, not innovation. -- Madhavan Ramanujam"},
+    {id:"f-good-pm-bad-pm",label:"Good PM / Bad PM",type:"framework",color:"#fdcb6e",desc:"The PM job is fundamentally a leadership job -- a tricky one because nobody reports to you. Good PMs know the market, bad PMs are told what to build. -- Ben Horowitz"},
+    {id:"f-run-toward-fear",label:"Run Toward Fear",type:"framework",color:"#fdcb6e",desc:"The hardest decisions are where both options are terrible. The worst thing a leader does is hesitate. Build the muscle to stare into the abyss and choose. -- Ben Horowitz"},
+    {id:"f-good-inside",label:"People Are Good Inside",type:"framework",color:"#fdcb6e",desc:"Separate behavior from identity. Bad behavior means someone lacks a skill, not that they're a bad person. This unlocks productive conversations. -- Dr. Becky Kennedy"},
+    {id:"f-boundaries",label:"Boundaries as Self-Care",type:"framework",color:"#fdcb6e",desc:"Boundaries aren't about controlling others -- they're about telling people what YOU will do. 'I will leave the meeting if voices are raised.' That's a boundary. -- Dr. Becky Kennedy"},
+    {id:"f-resilience-over-happiness",label:"Resilience Over Happiness",type:"framework",color:"#fdcb6e",desc:"Don't optimize for happiness -- optimize for resilience. Build cultures where people say 'This is hard and I can do hard things.' -- Dr. Becky Kennedy"},
+    {id:"f-low-impact-death-spiral",label:"Low-Impact PM Death Spiral",type:"framework",color:"#fdcb6e",desc:"Adding little features, cosmetic improvements, waiting for the next layoff round. Ask: 'If I were CEO, would I fully fund my own team?' -- Matt LeMay"},
+    {id:"f-one-step-from-company-goals",label:"Goals: One Step from Company Goals",type:"framework",color:"#fdcb6e",desc:"Team goals must be no more than one step removed from company goals. Don't let goals cascade into oblivion through layers of management. -- Matt LeMay"},
+    {id:"f-95-innovate-5-optimize",label:"95% Innovation / 5% Optimization",type:"framework",color:"#fdcb6e",desc:"In hyper-competitive AI markets, flip the traditional ratio. Spend 95% innovating on new growth loops and only 5% optimizing existing ones. -- Elena Verna"},
+    {id:"f-reinvention-not-optimization",label:"Reinvention Over Optimization",type:"framework",color:"#fdcb6e",desc:"To stay ahead of competitors, reinvent the solution rather than optimize the problem. The playbook from the last 15 years only 30-40% applies. -- Elena Verna"},
+    {id:"f-philosopher-stone",label:"AI as Philosopher's Stone",type:"framework",color:"#fdcb6e",desc:"AI transforms the most common thing (sand/silicon) into the most rare thing (thought/intelligence). We get AI and robots exactly when declining population demands it. -- Marc Andreessen"},
+    {id:"f-optionality-tax",label:"The Tax on Optionality",type:"framework",color:"#fdcb6e",desc:"Moving fast and trying many things creates a massive tax. CEOs must be faster and better decision makers because the cost of indecision compounds. -- Brian Halligan"},
+    {id:"f-culture-is-founder",label:"80% of Culture = Founder Personality",type:"framework",color:"#fdcb6e",desc:"80% of company culture is literally defined by the personality of the founder. Google felt like PhD paradise, Facebook felt like a hacker's dorm room. -- Molly Graham"},
+    {id:"f-value-creation-mantra",label:"Value Creation as North Star",type:"framework",color:"#fdcb6e",desc:"'The measure of our success is the amount of value we create for customers.' Stewart made this a company-wide chant. No substitute for actually creating value. -- Stewart Butterfield"},
+    {id:"f-friction-can-be-good",label:"Friction Can Be Good",type:"framework",color:"#fdcb6e",desc:"Counter-intuitively, friction in a product experience is often a good thing. It creates intentionality and can increase perceived value. -- Stewart Butterfield"},
+    {id:"f-crazy-big-goals",label:"Crazy Big Goals",type:"framework",color:"#fdcb6e",desc:"A goal so ambitious you feel completely inadequate before it. That inadequacy drives the motivation to will it into existence. Vision wall for 2050. -- Melanie Perkins"},
+    {id:"f-rejection-as-feedback",label:"Rejection = Feedback for Pitch Deck",type:"framework",color:"#fdcb6e",desc:"Each investor rejection becomes a new slide. 'Market too small' = add TAM slide. 'Same as competitor' = add competitive landscape. 100+ rejections made the pitch perfect. -- Melanie Perkins"},
+
+    // TACTICAL INSIGHTS (type: insight)
+    {id:"i-first-30-seconds",label:"First 30 Seconds Must Be Magic",type:"insight",color:"#fd79a8",desc:"Make the first 30 seconds of your product feel magical. That earns you the next 30 seconds. Think of users as selfish, vain, and lazy -- then delight them. -- Grant Lee (Gamma)"},
+    {id:"i-word-of-mouth-machine",label:"Build a Word-of-Mouth Machine",type:"insight",color:"#fd79a8",desc:"Your mindset should be creating a word-of-mouth machine. If you can get that right, everything else becomes significantly easier. Don't brute-force PMF with ads. -- Grant Lee"},
+    {id:"i-one-egg",label:"Throw One Egg, Not Five",type:"insight",color:"#fd79a8",desc:"Throw a consumer one egg, they catch it. Throw five, they drop all. Focus onboarding on your single most magical feature, not your feature list. -- Grant Lee"},
+    {id:"i-micro-influencers",label:"Micro-Influencers > Mega Creators",type:"insight",color:"#fd79a8",desc:"Don't chase million-follower creators with scripts. Find thousands of micro-influencers where your product is actually useful. Their trust creates wildfire growth. -- Grant Lee"},
+    {id:"i-founder-led-marketing",label:"Founder-Led Marketing",type:"insight",color:"#fd79a8",desc:"The founder should be the chief storyteller. Build goodwill with valuable content, bank it, then exchange it when announcing products. Clarity over cleverness. -- Grant Lee"},
+    {id:"i-ship-to-learn",label:"Ship to Learn, Not to Launch",type:"insight",color:"#fd79a8",desc:"With AI, you won't know what to polish until after you ship. ChatGPT was meant as a hackathon project. Ship open-ended, watch what people do, then iterate. -- Nick Turley"},
+    {id:"i-maximally-accelerated",label:"Is It Maximally Accelerated?",type:"insight",color:"#fd79a8",desc:"Ask: 'Why can't we do this now?' Not to recklessly rush, but to identify what's truly critical path vs what can happen later. OpenAI has a Slack emoji for this. -- Nick Turley"},
+    {id:"i-model-is-product",label:"The Model IS the Product",type:"insight",color:"#fd79a8",desc:"There is no distinction between the model and the product. The model is the product and must be iterated on like a product -- discovery, data science, user feedback. -- Nick Turley"},
+    {id:"i-resting-heartbeat",label:"Set the Team's Resting Heartbeat",type:"insight",color:"#fd79a8",desc:"A leader's job is to set the pace and resting heartbeat of the team. Daily release syncs, fast learning loops. Execution > ideas in AI. -- Nick Turley"},
+    {id:"i-sell-alpha-not-feature",label:"Sell the Alpha, Not the Feature",type:"insight",color:"#fd79a8",desc:"In enterprise sales, don't pitch 'we're better.' Pitch something counterintuitive that makes them say 'What?' Focus on problem, not solution. -- Jen Abel"},
+    {id:"i-founder-is-product",label:"The Founder Is the Product",type:"insight",color:"#fd79a8",desc:"In early sales, there is no product to sell -- the founder IS the product. Your novel insight and vision are what the market is buying. -- Jen Abel"},
+    {id:"i-vulnerability-in-sales",label:"Vulnerability Unlocks Honest Feedback",type:"insight",color:"#fd79a8",desc:"Say you're early stage with much to learn. If you claim a fully-baked product, they'll be polite. If you say it's unfinished, they'll be honest. -- Jen Abel"},
+    {id:"i-chatgpt-10-days",label:"ChatGPT: 10 Days to Ship",type:"insight",color:"#fd79a8",desc:"ChatGPT went from 'let's ship this' to public launch in 10 days. They planned to wind it down after the holidays. It became the fastest-growing product in history. -- Nick Turley"},
+    {id:"i-never-easier-start-harder-scale",label:"Easier to Start, Harder to Scale",type:"insight",color:"#fd79a8",desc:"Starting a company has never been easier. Scaling one into a durable, high-impact organization has never been harder. The gap is widening. -- Brian Halligan"},
+    {id:"i-prices-too-low",label:"Your Prices Are Too Low",type:"insight",color:"#fd79a8",desc:"You guessed and haven't changed them. Raise prices -- signups often don't change. To a $400M company, a $2/mo product signals 'can't be good enough.' -- Jason Cohen"},
+    {id:"i-adapt-when-adopting",label:"Adapt When Adopting",type:"insight",color:"#fd79a8",desc:"When borrowing features from other products: Why does it work there? Will it translate? What adaptations are needed? Blindly copying fails. -- Duolingo Growth Story"},
+
+    // NEWSLETTER CONCEPTS (type: newsletter)
+    {id:"n-duolingo-curr",label:"CURR: Current User Retention Rate",type:"newsletter",color:"#74b9ff",desc:"Duolingo's breakthrough: CURR (Current User Retention Rate) had 5x the impact of any other metric on DAU. Improving CURR 21% = 4.5x DAU growth over 4 years. Moving CURR compounds because retained users return to the same bucket."},
+    {id:"n-protect-the-channel",label:"Protect the Channel",type:"newsletter",color:"#74b9ff",desc:"Groupon destroyed their email channel by aggressively A/B testing more sends. Duolingo's rule: optimize timing, copy, images freely, but NEVER increase notification quantity without CEO approval."},
+    {id:"n-streaks-compounding",label:"Streaks as Compounding Motivation",type:"newsletter",color:"#74b9ff",desc:"Users with a 10-day streak have massively lower churn. Streaks increase motivation over time -- the longer the streak, the greater the impetus to continue. Each day, users care more about coming back than the day before."},
+    {id:"n-second-brain",label:"PM Second Brain with AI",type:"newsletter",color:"#74b9ff",desc:"Dump all context (Slack, docs, data) into a ChatGPT Project. It becomes a living second brain that stores, synthesizes, and helps you reason with more clarity. Context is the new interface."},
+    {id:"n-evals-core-skill",label:"AI Evals: The Defining PM Skill",type:"newsletter",color:"#74b9ff",desc:"Evals decide whether AI products thrive or die. The 4-part formula: set the role, provide context, provide the goal, define terminology. Like a driving test for AI systems."},
+    {id:"n-leaderboards-vector",label:"Leaderboards as Growth Vector",type:"newsletter",color:"#74b9ff",desc:"Duolingo's league leaderboard system: compete with similarly-engaged users (not just friends). Learning time +17%, highly engaged learners tripled. Closeness of engagement > closeness of relationship."},
+  ],
+
+  edges: [
+    // Guest -> Topic connections
+    {source:"brian-halligan",target:"t-leadership"},{source:"brian-halligan",target:"t-startup"},
+    {source:"jason-cohen",target:"t-growth"},{source:"jason-cohen",target:"t-pricing"},
+    {source:"molly-graham",target:"t-leadership"},{source:"molly-graham",target:"t-startup"},
+    {source:"stewart-butterfield",target:"t-product"},{source:"stewart-butterfield",target:"t-startup"},
+    {source:"marc-andreessen",target:"t-ai"},{source:"marc-andreessen",target:"t-startup"},
+    {source:"ben-horowitz",target:"t-leadership"},{source:"ben-horowitz",target:"t-product"},
+    {source:"melanie-perkins",target:"t-startup"},{source:"melanie-perkins",target:"t-pmf"},
+    {source:"dr-becky-kennedy",target:"t-psychology"},{source:"dr-becky-kennedy",target:"t-leadership"},
+    {source:"matt-lemay",target:"t-product"},{source:"matt-lemay",target:"t-leadership"},
+    {source:"elena-verna",target:"t-growth"},{source:"elena-verna",target:"t-ai"},
+    {source:"grant-lee",target:"t-growth"},{source:"grant-lee",target:"t-pmf"},{source:"grant-lee",target:"t-sales"},
+    {source:"madhavan-ramanujam",target:"t-pricing"},{source:"madhavan-ramanujam",target:"t-product"},
+    {source:"nick-turley",target:"t-ai"},{source:"nick-turley",target:"t-product"},{source:"nick-turley",target:"t-growth"},
+    {source:"jen-abel",target:"t-sales"},{source:"jen-abel",target:"t-startup"},
+    {source:"dr-fei-fei-li",target:"t-ai"},
+    {source:"chip-huyen",target:"t-ai"},
+    {source:"bret-taylor",target:"t-ai"},{source:"bret-taylor",target:"t-product"},
+    {source:"dan-shipper",target:"t-ai"},{source:"dan-shipper",target:"t-startup"},
+
+    // Guest -> Framework connections
+    {source:"brian-halligan",target:"f-optionality-tax"},
+    {source:"molly-graham",target:"f-give-away-legos"},{source:"molly-graham",target:"f-j-curve-stairs"},{source:"molly-graham",target:"f-culture-is-founder"},
+    {source:"jason-cohen",target:"f-5-questions-growth"},
+    {source:"stewart-butterfield",target:"f-value-creation-mantra"},{source:"stewart-butterfield",target:"f-friction-can-be-good"},
+    {source:"marc-andreessen",target:"f-philosopher-stone"},
+    {source:"ben-horowitz",target:"f-good-pm-bad-pm"},{source:"ben-horowitz",target:"f-run-toward-fear"},
+    {source:"melanie-perkins",target:"f-crazy-big-goals"},{source:"melanie-perkins",target:"f-rejection-as-feedback"},
+    {source:"dr-becky-kennedy",target:"f-good-inside"},{source:"dr-becky-kennedy",target:"f-boundaries"},{source:"dr-becky-kennedy",target:"f-resilience-over-happiness"},
+    {source:"matt-lemay",target:"f-low-impact-death-spiral"},{source:"matt-lemay",target:"f-one-step-from-company-goals"},
+    {source:"elena-verna",target:"f-95-innovate-5-optimize"},{source:"elena-verna",target:"f-reinvention-not-optimization"},
+    {source:"madhavan-ramanujam",target:"f-price-as-measure"},{source:"madhavan-ramanujam",target:"f-four-monetization-fails"},
+
+    // Guest -> Insight connections
+    {source:"grant-lee",target:"i-first-30-seconds"},{source:"grant-lee",target:"i-word-of-mouth-machine"},{source:"grant-lee",target:"i-one-egg"},{source:"grant-lee",target:"i-micro-influencers"},{source:"grant-lee",target:"i-founder-led-marketing"},
+    {source:"nick-turley",target:"i-ship-to-learn"},{source:"nick-turley",target:"i-maximally-accelerated"},{source:"nick-turley",target:"i-model-is-product"},{source:"nick-turley",target:"i-resting-heartbeat"},{source:"nick-turley",target:"i-chatgpt-10-days"},
+    {source:"jen-abel",target:"i-sell-alpha-not-feature"},{source:"jen-abel",target:"i-founder-is-product"},{source:"jen-abel",target:"i-vulnerability-in-sales"},
+    {source:"brian-halligan",target:"i-never-easier-start-harder-scale"},
+    {source:"jason-cohen",target:"i-prices-too-low"},
+
+    // Topic -> Framework connections (cross-links)
+    {source:"t-leadership",target:"f-give-away-legos"},{source:"t-leadership",target:"f-run-toward-fear"},{source:"t-leadership",target:"f-resilience-over-happiness"},
+    {source:"t-growth",target:"f-5-questions-growth"},{source:"t-growth",target:"f-95-innovate-5-optimize"},
+    {source:"t-product",target:"f-good-pm-bad-pm"},{source:"t-product",target:"f-low-impact-death-spiral"},{source:"t-product",target:"f-value-creation-mantra"},
+    {source:"t-pricing",target:"f-price-as-measure"},{source:"t-pricing",target:"f-four-monetization-fails"},
+    {source:"t-psychology",target:"f-good-inside"},{source:"t-psychology",target:"f-boundaries"},
+    {source:"t-startup",target:"f-crazy-big-goals"},{source:"t-startup",target:"f-optionality-tax"},
+    {source:"t-ai",target:"f-philosopher-stone"},
+    {source:"t-pmf",target:"i-word-of-mouth-machine"},
+
+    // Insight -> Topic cross-links
+    {source:"i-ship-to-learn",target:"t-ai"},{source:"i-ship-to-learn",target:"t-product"},
+    {source:"i-first-30-seconds",target:"t-pmf"},{source:"i-first-30-seconds",target:"t-product"},
+    {source:"i-micro-influencers",target:"t-growth"},
+    {source:"i-founder-led-marketing",target:"t-sales"},
+    {source:"i-sell-alpha-not-feature",target:"t-sales"},
+
+    // Newsletter connections
+    {source:"n-duolingo-curr",target:"t-growth"},{source:"n-streaks-compounding",target:"t-growth"},{source:"n-leaderboards-vector",target:"t-growth"},
+    {source:"n-protect-the-channel",target:"t-growth"},{source:"n-protect-the-channel",target:"t-product"},
+    {source:"n-second-brain",target:"t-ai"},{source:"n-second-brain",target:"t-product"},
+    {source:"n-evals-core-skill",target:"t-ai"},{source:"n-evals-core-skill",target:"t-product"},
+    {source:"n-duolingo-curr",target:"i-adapt-when-adopting"},
+    {source:"n-streaks-compounding",target:"t-psychology"},
+    {source:"n-leaderboards-vector",target:"t-psychology"},
+
+    // Cross-guest idea connections (the unexpected connections!)
+    {source:"f-give-away-legos",target:"f-j-curve-stairs"},
+    {source:"f-run-toward-fear",target:"f-optionality-tax"},
+    {source:"f-resilience-over-happiness",target:"f-run-toward-fear"},
+    {source:"f-good-inside",target:"f-good-pm-bad-pm"},
+    {source:"f-reinvention-not-optimization",target:"f-philosopher-stone"},
+    {source:"f-price-as-measure",target:"f-5-questions-growth"},
+    {source:"i-founder-is-product",target:"i-founder-led-marketing"},
+    {source:"i-ship-to-learn",target:"i-maximally-accelerated"},
+    {source:"i-word-of-mouth-machine",target:"i-first-30-seconds"},
+    {source:"f-value-creation-mantra",target:"f-crazy-big-goals"},
+    {source:"f-low-impact-death-spiral",target:"f-one-step-from-company-goals"},
+    {source:"f-rejection-as-feedback",target:"i-vulnerability-in-sales"},
+    {source:"f-culture-is-founder",target:"f-give-away-legos"},
+    {source:"i-resting-heartbeat",target:"f-optionality-tax"},
+    {source:"n-second-brain",target:"n-evals-core-skill"},
+  ]
+};
+
+// ============================================================
+// GRAPH ENGINE
+// ============================================================
+const canvas = document.getElementById('graphCanvas');
+const ctx = canvas.getContext('2d');
+const tooltip = document.getElementById('tooltip');
+const detailPanel = document.getElementById('detailPanel');
+const detailContent = document.getElementById('detailContent');
+const searchInput = document.getElementById('searchInput');
+
+let W, H, dpr;
+let nodes = [], edges = [];
+let hoveredNode = null, selectedNode = null, dragNode = null;
+let camX = 0, camY = 0, camZoom = 1;
+let isDragging = false, isPanning = false;
+let panStartX, panStartY, panCamX, panCamY;
+let mouseX = 0, mouseY = 0;
+let activeView = 'all';
+let activeTopics = new Set();
+let animFrame;
+
+const TYPE_COLORS = {guest:"#6c5ce7",topic:"#00cec9",framework:"#fdcb6e",insight:"#fd79a8",newsletter:"#74b9ff"};
+const TYPE_SIZES = {guest:22,topic:18,framework:14,insight:12,newsletter:13};
+const TYPE_LABELS = {guest:"Guest",topic:"Topic",framework:"Framework",insight:"Insight",newsletter:"Newsletter"};
+
+function initNodes() {
+  const nmap = {};
+  DATA.nodes.forEach(n => { nmap[n.id] = true; });
+  nodes = DATA.nodes.map(n => ({
+    ...n,
+    x: (Math.random() - 0.5) * 800,
+    y: (Math.random() - 0.5) * 600,
+    vx: 0, vy: 0,
+    r: TYPE_SIZES[n.type] || 12,
+    visible: true,
+    alpha: 1,
+    connections: 0
+  }));
+  edges = DATA.edges.filter(e => nmap[e.source] && nmap[e.target]);
+  // count connections
+  edges.forEach(e => {
+    const s = nodes.find(n=>n.id===e.source);
+    const t = nodes.find(n=>n.id===e.target);
+    if(s) s.connections++;
+    if(t) t.connections++;
+  });
+  // Adjust radius based on connections
+  nodes.forEach(n => {
+    n.r = (TYPE_SIZES[n.type] || 12) + Math.min(n.connections * 0.8, 10);
+  });
+  document.getElementById('nodeCount').textContent = nodes.length;
+  document.getElementById('edgeCount').textContent = edges.length;
+}
+
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  W = rect.width; H = rect.height;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+// Force-directed layout
+function applyForces() {
+  const vis = nodes.filter(n => n.visible);
+  // Repulsion
+  for (let i = 0; i < vis.length; i++) {
+    for (let j = i + 1; j < vis.length; j++) {
+      let dx = vis[j].x - vis[i].x;
+      let dy = vis[j].y - vis[i].y;
+      let d2 = dx * dx + dy * dy;
+      if (d2 < 1) d2 = 1;
+      let d = Math.sqrt(d2);
+      let f = 3000 / d2;
+      let fx = (dx / d) * f;
+      let fy = (dy / d) * f;
+      vis[i].vx -= fx; vis[i].vy -= fy;
+      vis[j].vx += fx; vis[j].vy += fy;
+    }
+  }
+  // Attraction along edges
+  edges.forEach(e => {
+    const s = nodes.find(n => n.id === e.source);
+    const t = nodes.find(n => n.id === e.target);
+    if (!s || !t || !s.visible || !t.visible) return;
+    let dx = t.x - s.x;
+    let dy = t.y - s.y;
+    let d = Math.sqrt(dx * dx + dy * dy);
+    if (d < 1) d = 1;
+    let f = (d - 120) * 0.004;
+    let fx = (dx / d) * f;
+    let fy = (dy / d) * f;
+    s.vx += fx; s.vy += fy;
+    t.vx -= fx; t.vy -= fy;
+  });
+  // Center gravity
+  vis.forEach(n => {
+    n.vx -= n.x * 0.0003;
+    n.vy -= n.y * 0.0003;
+  });
+  // Apply velocity
+  vis.forEach(n => {
+    if (n === dragNode) return;
+    n.vx *= 0.85; n.vy *= 0.85;
+    n.x += n.vx; n.y += n.vy;
+  });
+}
+
+function worldToScreen(wx, wy) {
+  return [(wx - camX) * camZoom + W / 2, (wy - camY) * camZoom + H / 2];
+}
+function screenToWorld(sx, sy) {
+  return [(sx - W / 2) / camZoom + camX, (sy - H / 2) / camZoom + camY];
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(camZoom, camZoom);
+  ctx.translate(-camX, -camY);
+
+  const time = performance.now() * 0.001;
+
+  // Draw edges
+  edges.forEach(e => {
+    const s = nodes.find(n => n.id === e.source);
+    const t = nodes.find(n => n.id === e.target);
+    if (!s || !t || !s.visible || !t.visible) return;
+    const highlighted = selectedNode && (s.id === selectedNode.id || t.id === selectedNode.id);
+    const hovered = hoveredNode && (s.id === hoveredNode.id || t.id === hoveredNode.id);
+    const dimmed = selectedNode && !highlighted;
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(t.x, t.y);
+    if (highlighted || hovered) {
+      ctx.strokeStyle = hovered && !selectedNode ? 'rgba(160,155,254,0.5)' : 'rgba(160,155,254,0.7)';
+      ctx.lineWidth = 1.5 / camZoom;
+    } else {
+      ctx.strokeStyle = dimmed ? 'rgba(42,42,68,0.15)' : 'rgba(42,42,68,0.4)';
+      ctx.lineWidth = 0.8 / camZoom;
+    }
+    ctx.stroke();
+  });
+
+  // Draw nodes
+  nodes.forEach(n => {
+    if (!n.visible) return;
+    const isSelected = selectedNode && selectedNode.id === n.id;
+    const isConnected = selectedNode && edges.some(e =>
+      (e.source === selectedNode.id && e.target === n.id) ||
+      (e.target === selectedNode.id && e.source === n.id)
+    );
+    const dimmed = selectedNode && !isSelected && !isConnected;
+    const isHovered = hoveredNode && hoveredNode.id === n.id;
+
+    const alpha = dimmed ? 0.15 : 1;
+    const r = n.r * (isHovered ? 1.2 : 1) * (isSelected ? 1.3 : 1);
+
+    // Glow for selected/hovered
+    if ((isSelected || isHovered) && !dimmed) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r + 8, 0, Math.PI * 2);
+      const grd = ctx.createRadialGradient(n.x, n.y, r, n.x, n.y, r + 8);
+      grd.addColorStop(0, n.color + '66');
+      grd.addColorStop(1, n.color + '00');
+      ctx.fillStyle = grd;
+      ctx.fill();
+    }
+
+    // Ambient pulse for guests
+    if (n.type === 'guest' && !dimmed) {
+      const pulse = Math.sin(time * 1.5 + n.x * 0.01) * 0.15 + 0.85;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r + 4 * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = n.color + '18';
+      ctx.fill();
+    }
+
+    // Node circle
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = dimmed ? (n.color + '26') : n.color;
+    ctx.fill();
+
+    // Inner ring
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r - 2, 0, Math.PI * 2);
+    ctx.strokeStyle = dimmed ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 1 / camZoom;
+    ctx.stroke();
+
+    // Label
+    if (camZoom > 0.4 || isSelected || isHovered || n.type === 'guest') {
+      const fontSize = Math.max(10, Math.min(13, 12 / camZoom));
+      ctx.font = `${isSelected || n.type === 'guest' ? '600' : '400'} ${fontSize}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = dimmed ? 'rgba(224,224,240,0.12)' : 'rgba(224,224,240,0.9)';
+      ctx.fillText(n.label, n.x, n.y + r + 4);
+    }
+  });
+
+  ctx.restore();
+  applyForces();
+  animFrame = requestAnimationFrame(draw);
+}
+
+// ============================================================
+// INTERACTION
+// ============================================================
+function getNodeAt(sx, sy) {
+  const [wx, wy] = screenToWorld(sx, sy);
+  let best = null, bestD = Infinity;
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const n = nodes[i];
+    if (!n.visible) continue;
+    const dx = n.x - wx, dy = n.y - wy;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < n.r * 1.3 / camZoom + 5 && d < bestD) {
+      best = n; bestD = d;
+    }
+  }
+  return best;
+}
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+
+  if (isPanning) {
+    camX = panCamX - (e.clientX - panStartX) / camZoom;
+    camY = panCamY - (e.clientY - panStartY) / camZoom;
+    return;
+  }
+  if (dragNode) {
+    const [wx, wy] = screenToWorld(mouseX, mouseY);
+    dragNode.x = wx; dragNode.y = wy;
+    dragNode.vx = 0; dragNode.vy = 0;
+    return;
+  }
+
+  const node = getNodeAt(mouseX, mouseY);
+  hoveredNode = node;
+  canvas.style.cursor = node ? 'pointer' : 'grab';
+
+  if (node) {
+    tooltip.querySelector('.tt-title').textContent = node.label;
+    tooltip.querySelector('.tt-type').textContent = TYPE_LABELS[node.type] || node.type;
+    tooltip.style.left = (mouseX + 16) + 'px';
+    tooltip.style.top = (mouseY - 10) + 'px';
+    // Keep tooltip in bounds
+    const tr = tooltip.getBoundingClientRect();
+    const pr = canvas.parentElement.getBoundingClientRect();
+    if (tr.right > pr.right) tooltip.style.left = (mouseX - tr.width - 8) + 'px';
+    if (tr.bottom > pr.bottom) tooltip.style.top = (mouseY - tr.height - 8) + 'px';
+    tooltip.classList.add('show');
+  } else {
+    tooltip.classList.remove('show');
+  }
+});
+
+canvas.addEventListener('mousedown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const node = getNodeAt(sx, sy);
+  if (node) {
+    dragNode = node;
+    isDragging = true;
+  } else {
+    isPanning = true;
+    panStartX = e.clientX; panStartY = e.clientY;
+    panCamX = camX; panCamY = camY;
+    canvas.style.cursor = 'grabbing';
+  }
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (dragNode && !isDragging) { /* noop */ }
+  if (dragNode) {
+    // If barely moved, treat as click
+    const rect = canvas.getBoundingClientRect();
+    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+    const node = getNodeAt(sx, sy);
+    if (node && node === dragNode) {
+      selectNode(node);
+    }
+  }
+  dragNode = null; isDragging = false; isPanning = false;
+  canvas.style.cursor = hoveredNode ? 'pointer' : 'grab';
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+  const newZoom = Math.max(0.15, Math.min(4, camZoom * zoomFactor));
+  // Zoom towards mouse
+  const [wx, wy] = screenToWorld(mouseX, mouseY);
+  camZoom = newZoom;
+  camX = wx - (mouseX - W / 2) / camZoom;
+  camY = wy - (mouseY - H / 2) / camZoom;
+}, { passive: false });
+
+// Touch support
+let lastTouchDist = 0;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    const t = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const sx = t.clientX - rect.left, sy = t.clientY - rect.top;
+    const node = getNodeAt(sx, sy);
+    if (node) { selectNode(node); }
+    else {
+      isPanning = true;
+      panStartX = t.clientX; panStartY = t.clientY;
+      panCamX = camX; panCamY = camY;
+    }
+  } else if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lastTouchDist = Math.sqrt(dx*dx+dy*dy);
+  }
+}, {passive:true});
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && isPanning) {
+    const t = e.touches[0];
+    camX = panCamX - (t.clientX - panStartX) / camZoom;
+    camY = panCamY - (t.clientY - panStartY) / camZoom;
+  } else if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const d = Math.sqrt(dx*dx+dy*dy);
+    if (lastTouchDist > 0) {
+      camZoom = Math.max(0.15, Math.min(4, camZoom * (d / lastTouchDist)));
+    }
+    lastTouchDist = d;
+  }
+}, {passive:false});
+canvas.addEventListener('touchend', () => { isPanning = false; lastTouchDist = 0; });
+
+// ============================================================
+// SELECTION & DETAIL PANEL
+// ============================================================
+function selectNode(node) {
+  if (selectedNode && selectedNode.id === node.id) {
+    selectedNode = null;
+    detailPanel.classList.remove('open');
+    return;
+  }
+  selectedNode = node;
+  showDetail(node);
+}
+
+function showDetail(node) {
+  const connected = [];
+  edges.forEach(e => {
+    if (e.source === node.id) {
+      const t = nodes.find(n => n.id === e.target);
+      if (t && t.visible) connected.push(t);
+    }
+    if (e.target === node.id) {
+      const s = nodes.find(n => n.id === e.source);
+      if (s && s.visible) connected.push(s);
+    }
+  });
+
+  // Gather wisdom cards (insights/frameworks connected to this node)
+  const wisdomNodes = connected.filter(n => n.type === 'framework' || n.type === 'insight' || n.type === 'newsletter');
+  const otherNodes = connected.filter(n => n.type !== 'framework' && n.type !== 'insight' && n.type !== 'newsletter');
+
+  let html = `<div class="type-badge" style="background:${node.color}22;color:${node.color}">${TYPE_LABELS[node.type]}</div>`;
+  html += `<h2>${node.label}</h2>`;
+  html += `<p class="desc">${node.desc}</p>`;
+
+  if (wisdomNodes.length) {
+    html += `<h4>Key Wisdom & Frameworks</h4>`;
+    wisdomNodes.forEach(w => {
+      html += `<div class="wisdom-card" data-id="${w.id}">
+        ${w.desc}
+        <div class="source" style="color:${w.color}">${TYPE_LABELS[w.type]}</div>
+      </div>`;
+    });
+  }
+
+  if (otherNodes.length) {
+    html += `<h4>Connections (${otherNodes.length})</h4><div class="conn-list">`;
+    otherNodes.forEach(c => {
+      html += `<div class="conn-item" data-id="${c.id}">
+        <div class="dot" style="background:${c.color}"></div>
+        <span>${c.label}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  detailContent.innerHTML = html;
+  detailPanel.classList.add('open');
+
+  // Click connections
+  detailContent.querySelectorAll('.conn-item, .wisdom-card').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.id;
+      const n = nodes.find(nd => nd.id === id);
+      if (n) {
+        selectNode(n);
+        // Pan to node
+        camX = n.x; camY = n.y;
+      }
+    });
+  });
+}
+
+document.getElementById('detailClose').addEventListener('click', () => {
+  selectedNode = null;
+  detailPanel.classList.remove('open');
+});
+
+// ============================================================
+// SEARCH
+// ============================================================
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+  if (!q) {
+    nodes.forEach(n => n.visible = isNodeInView(n));
+    return;
+  }
+  nodes.forEach(n => {
+    const match = n.label.toLowerCase().includes(q) || n.desc.toLowerCase().includes(q);
+    const isConnectedToMatch = edges.some(e => {
+      const other = e.source === n.id ? nodes.find(nd=>nd.id===e.target) : (e.target === n.id ? nodes.find(nd=>nd.id===e.source) : null);
+      return other && (other.label.toLowerCase().includes(q) || other.desc.toLowerCase().includes(q));
+    });
+    n.visible = (match || isConnectedToMatch) && isNodeInView(n, true);
+  });
+});
+
+// ============================================================
+// FILTERS
+// ============================================================
+function isNodeInView(n, ignoreSearch) {
+  if (activeView !== 'all') {
+    const viewMap = {guests:'guest',topics:'topic',frameworks:'framework'};
+    // For frameworks view, also show insights and newsletters
+    if (activeView === 'frameworks') {
+      if (n.type !== 'framework' && n.type !== 'insight' && n.type !== 'newsletter') return false;
+    } else if (viewMap[activeView] && n.type !== viewMap[activeView]) {
+      // Show connected nodes too
+      const targetType = viewMap[activeView];
+      if (n.type !== targetType) {
+        // Check if connected to a visible node
+        const isConnected = edges.some(e => {
+          const otherId = e.source === n.id ? e.target : (e.target === n.id ? e.source : null);
+          if (!otherId) return false;
+          const other = nodes.find(nd => nd.id === otherId);
+          return other && other.type === targetType;
+        });
+        if (!isConnected) return false;
+      }
+    }
+  }
+  if (activeTopics.size > 0) {
+    if (n.type === 'topic') return activeTopics.has(n.id);
+    // Check if connected to an active topic
+    const connToTopic = edges.some(e => {
+      const otherId = e.source === n.id ? e.target : (e.target === n.id ? e.source : null);
+      return otherId && activeTopics.has(otherId);
+    });
+    if (!connToTopic && n.type !== 'topic') return false;
+  }
+  return true;
+}
+
+function updateVisibility() {
+  const q = searchInput.value.toLowerCase().trim();
+  nodes.forEach(n => {
+    let vis = isNodeInView(n);
+    if (q) {
+      const match = n.label.toLowerCase().includes(q) || n.desc.toLowerCase().includes(q);
+      const isConnectedToMatch = edges.some(e => {
+        const other = e.source === n.id ? nodes.find(nd=>nd.id===e.target) : (e.target === n.id ? nodes.find(nd=>nd.id===e.source) : null);
+        return other && (other.label.toLowerCase().includes(q) || other.desc.toLowerCase().includes(q));
+      });
+      vis = vis && (match || isConnectedToMatch);
+    }
+    n.visible = vis;
+  });
+}
+
+// Build topic filter buttons
+function buildFilters() {
+  const topicNodes = DATA.nodes.filter(n => n.type === 'topic');
+  const container = document.getElementById('topicFilters');
+  topicNodes.forEach(t => {
+    const count = edges.filter(e => e.source === t.id || e.target === t.id).length;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset.id = t.id;
+    btn.innerHTML = `<div class="dot" style="background:${t.color}"></div>${t.label}<span class="count">${count}</span>`;
+    btn.addEventListener('click', () => {
+      if (activeTopics.has(t.id)) {
+        activeTopics.delete(t.id);
+        btn.classList.remove('active');
+      } else {
+        activeTopics.add(t.id);
+        btn.classList.add('active');
+      }
+      updateVisibility();
+    });
+    container.appendChild(btn);
+  });
+}
+
+// View toggle
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeView = btn.dataset.view;
+    updateVisibility();
+  });
+});
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  initNodes();
+  buildFilters();
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Initial layout: run forces silently for a bit
+  for (let i = 0; i < 200; i++) applyForces();
+
+  // Center camera
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  nodes.forEach(n => { minX=Math.min(minX,n.x);maxX=Math.max(maxX,n.x);minY=Math.min(minY,n.y);maxY=Math.max(maxY,n.y); });
+  camX = (minX+maxX)/2; camY = (minY+maxY)/2;
+  const rangeX = maxX-minX+200, rangeY = maxY-minY+200;
+  camZoom = Math.min(W/rangeX, H/rangeY, 1.2);
+
+  draw();
+}
+
+init();
+</script>
+</body>
+</html>
