@@ -4,10 +4,10 @@
   <img src="https://img.shields.io/badge/100%25-Client--Side-00cec9?style=for-the-badge" alt="100% Client-Side">
 </p>
 
-<h1 align="center">Lenny's Data Explorer</h1>
+<h1 align="center">Product Wisdom Explorer</h1>
 
 <p align="center">
-  <strong>Interactive tools that turn Lenny Rachitsky's podcast and newsletter wisdom into explorable, visual experiences.</strong>
+  <strong>Interactive tools that turn podcast and newsletter wisdom from Lenny Rachitsky into explorable, visual experiences.</strong>
 </p>
 
 <p align="center">
@@ -18,7 +18,7 @@
 
 ## The Apps
 
-### 1. Lenny's Wisdom Graph
+### 1. Product Wisdom Graph
 
 > An interactive knowledge graph that maps the frameworks, mental models, and connections between 50+ podcast guests.
 
@@ -37,7 +37,7 @@ Explore how ideas connect across episodes. See which guests share frameworks, wh
 
 ---
 
-### 2. Lenny's PM Career Advisor
+### 2. PM Career Advisor
 
 > An interactive career advisor that surfaces real, specific advice from podcast guests — matched to your situation.
 
