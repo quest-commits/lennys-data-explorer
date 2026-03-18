@@ -60,7 +60,7 @@ Ask about career transitions, managing up, landing a PM role, navigating ambigui
 No install. No dependencies. No build step.
 
 ```
-git clone https://github.com/YOUR_USERNAME/lennys-data-explorer.git
+git clone https://github.com/quest-commits/lennys-data-explorer.git
 cd lennys-data-explorer
 ```
 
@@ -72,7 +72,7 @@ Then open any of these in your browser:
 | Wisdom Graph | `wisdom-graph/index.html` |
 | PM Career Advisor | `career-advisor/index.html` |
 
-Or just visit the **[GitHub Pages site](https://YOUR_USERNAME.github.io/lennys-data-explorer/)** (once deployed).
+Or just visit the **[GitHub Pages site](https://quest-commits.github.io/lennys-data-explorer/)** (once deployed).
 
 ---
 
