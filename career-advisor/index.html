@@ -114,7 +114,7 @@
   .advice-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
     padding: 24px; margin-bottom: 16px; transition: all 0.3s;
-    animation: fadeInUp 0.4s ease;
+    animation: fadeInUp 0.4s ease both;
   }
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(16px); }
@@ -183,7 +183,7 @@
 
   .wisdom-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 18px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;
+    padding: 18px; margin-bottom: 12px; transition: all 0.2s;
   }
   .wisdom-card:hover { border-color: var(--accent); }
   .wisdom-card .w-topic { font-size: 0.75em; color: var(--accent2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
@@ -217,7 +217,7 @@
   </div>
 
   <!-- Featured Quote Carousel -->
-  <div id="featured-quote" style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 24px; cursor: pointer; transition: all 0.3s;" onclick="nextFeaturedQuote()">
+  <div id="featured-quote" role="button" tabindex="0" aria-label="Featured wisdom quote - click or press Enter for next" style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 24px; cursor: pointer; transition: all 0.3s;" onclick="nextFeaturedQuote()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nextFeaturedQuote();}">
     <div style="font-size: 0.75em; color: var(--accent2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;">Featured Wisdom &middot; Click for more</div>
     <div id="fq-text" style="font-size: 1.05em; line-height: 1.65; font-style: italic; margin-bottom: 12px;"></div>
     <div id="fq-author" style="font-size: 0.85em; color: var(--text-dim); font-weight: 600;"></div>
@@ -243,17 +243,17 @@
     </div>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('advisor')">Get Advice</button>
-    <button class="tab" onclick="switchTab('explore')">Explore Wisdom</button>
-    <button class="tab" onclick="switchTab('reading')">Reading List</button>
+  <div class="tabs" role="tablist" aria-label="Navigation">
+    <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-advisor" onclick="switchTab('advisor', this)">Get Advice</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-explore" onclick="switchTab('explore', this)">Explore Wisdom</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-reading" onclick="switchTab('reading', this)">Reading List</button>
   </div>
 
   <!-- ADVISOR PANEL -->
-  <div id="panel-advisor" class="panel active">
+  <div id="panel-advisor" class="panel active" role="tabpanel">
     <div class="form-row">
       <div class="form-group">
-        <label>Your Role</label>
+        <label for="role-select">Your Role</label>
         <select id="role-select">
           <option value="pm">Product Manager</option>
           <option value="founder">Founder / CEO</option>
@@ -264,7 +264,7 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Experience Level</label>
+        <label for="level-select">Experience Level</label>
         <select id="level-select">
           <option value="early">Early Career (0-3 years)</option>
           <option value="mid">Mid Career (3-8 years)</option>
@@ -283,22 +283,22 @@
   </div>
 
   <!-- EXPLORE PANEL -->
-  <div id="panel-explore" class="panel">
-    <input type="text" class="search-box" id="search-box" placeholder="Search wisdom... (e.g. pricing, hiring, growth, AI, leadership)" oninput="filterWisdom()">
+  <div id="panel-explore" class="panel" role="tabpanel">
+    <input type="text" class="search-box" id="search-box" aria-label="Search wisdom quotes" placeholder="Search wisdom... (e.g. pricing, hiring, growth, AI, leadership)" oninput="filterWisdom()">
     <div id="wisdom-list"></div>
   </div>
 
   <!-- READING LIST PANEL -->
-  <div id="panel-reading" class="panel">
+  <div id="panel-reading" class="panel" role="tabpanel">
     <div class="section-title">Personalized Reading List</div>
     <p style="color: var(--text-dim); margin-bottom: 20px; font-size: 0.9em;">Select a challenge in the "Get Advice" tab first, then come here for your curated episode guide.</p>
     <div id="reading-list"></div>
   </div>
 
   <div class="footer">
-    Built with data from <a href="https://www.lennysdata.com" target="_blank">Lenny's Data</a> &middot;
-    <a href="https://www.lennyspodcast.com" target="_blank">Lenny's Podcast</a> &middot;
-    <a href="https://www.lennysnewsletter.com" target="_blank">Lenny's Newsletter</a><br>
+    Built with data from <a href="https://www.lennysdata.com" target="_blank" rel="noopener noreferrer">Lenny's Data</a> &middot;
+    <a href="https://www.lennyspodcast.com" target="_blank" rel="noopener noreferrer">Lenny's Podcast</a> &middot;
+    <a href="https://www.lennysnewsletter.com" target="_blank" rel="noopener noreferrer">Lenny's Newsletter</a><br>
     Data from the free starter pack &middot; 50 podcast transcripts &middot; 10 newsletter posts
   </div>
 </div>
@@ -804,8 +804,8 @@ function init() {
 function renderChallenges() {
   const grid = document.getElementById('challenge-grid');
   grid.innerHTML = challenges.map(c => `
-    <button class="challenge-btn ${selectedChallenge === c.id ? 'selected' : ''}" onclick="selectChallenge('${c.id}')">
-      <span class="icon">${c.icon}</span>
+    <button class="challenge-btn ${selectedChallenge === c.id ? 'selected' : ''}" aria-pressed="${selectedChallenge === c.id}" onclick="selectChallenge('${c.id}')">
+      <span class="icon" aria-hidden="true">${c.icon}</span>
       ${c.label}
     </button>
   `).join('');
@@ -952,6 +952,10 @@ function filterWisdom() {
 
 function renderWisdomList(quotes) {
   const list = document.getElementById('wisdom-list');
+  if (quotes.length === 0) {
+    list.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 40px;">No quotes found matching your search. Try different keywords.</p>';
+    return;
+  }
   list.innerHTML = quotes.map(q => `
     <div class="wisdom-card">
       <div class="w-topic">${q.topic}</div>
@@ -961,10 +965,11 @@ function renderWisdomList(quotes) {
   `).join('');
 }
 
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  event.target.classList.add('active');
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.setAttribute('role', 'tabpanel'); });
+  btn.classList.add('active');
+  btn.setAttribute('aria-selected', 'true');
   document.getElementById('panel-' + tab).classList.add('active');
 }
 
@@ -985,14 +990,20 @@ function showFeaturedQuote() {
   document.getElementById('fq-text').textContent = '"' + q.text + '"';
   document.getElementById('fq-author').textContent = '-- ' + q.author;
 }
+let fqTimer = null;
+let fqTransition = null;
 function nextFeaturedQuote() {
+  if (fqTransition) clearTimeout(fqTransition);
   fqIndex = (fqIndex + 1) % featuredQuotes.length;
   const el = document.getElementById('featured-quote');
   el.style.opacity = '0';
-  setTimeout(() => { showFeaturedQuote(); el.style.opacity = '1'; }, 200);
+  fqTransition = setTimeout(() => { showFeaturedQuote(); el.style.opacity = '1'; fqTransition = null; }, 200);
+  // Reset auto-advance timer on manual click
+  if (fqTimer) clearInterval(fqTimer);
+  fqTimer = setInterval(nextFeaturedQuote, 8000);
 }
 showFeaturedQuote();
-setInterval(nextFeaturedQuote, 8000);
+fqTimer = setInterval(nextFeaturedQuote, 8000);
 
 init();
 </script>

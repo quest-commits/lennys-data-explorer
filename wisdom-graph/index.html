@@ -8,7 +8,7 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
     --bg:#0a0a14;--surface:#12121f;--surface2:#1a1a2e;--border:#2a2a44;
-    --text:#e0e0f0;--text2:#8888aa;--accent:#6c5ce7;--accent2:#a29bfe;
+    --text:#e0e0f0;--text2:#9999bb;--accent:#6c5ce7;--accent2:#a29bfe;
     --glow:#6c5ce7;--green:#00cec9;--orange:#fdcb6e;--pink:#fd79a8;
     --blue:#74b9ff;--red:#ff7675;--yellow:#ffeaa7;
   }
@@ -95,7 +95,7 @@
   <div class="logo">Product Wisdom Graph <span>| Built on Lenny's Data</span></div>
   <div class="search-box">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="searchInput" placeholder="Search guests, topics, frameworks...">
+    <input type="text" id="searchInput" placeholder="Search guests, topics, frameworks..." aria-label="Search nodes by name, topic, or framework">
   </div>
   <div class="stats"><b id="nodeCount">0</b> nodes &middot; <b id="edgeCount">0</b> connections</div>
 </div>
@@ -126,10 +126,10 @@
   </div>
 
   <div class="canvas-wrap">
-    <canvas id="graphCanvas"></canvas>
+    <canvas id="graphCanvas" role="img" aria-label="Interactive knowledge graph showing product wisdom nodes and their connections. Use mouse or touch to explore." tabindex="0"></canvas>
     <div class="tooltip" id="tooltip"><div class="tt-title"></div><div class="tt-type"></div></div>
     <div class="detail" id="detailPanel">
-      <button class="detail-close" id="detailClose">&times;</button>
+      <button class="detail-close" id="detailClose" aria-label="Close detail panel">&times;</button>
       <div id="detailContent"></div>
     </div>
   </div>
@@ -333,6 +333,7 @@ let animFrame;
 const TYPE_COLORS = {guest:"#6c5ce7",topic:"#00cec9",framework:"#fdcb6e",insight:"#fd79a8",newsletter:"#74b9ff"};
 const TYPE_SIZES = {guest:22,topic:18,framework:14,insight:12,newsletter:13};
 const TYPE_LABELS = {guest:"Guest",topic:"Topic",framework:"Framework",insight:"Insight",newsletter:"Newsletter"};
+let nodeMap = {};
 
 function initNodes() {
   const nmap = {};
@@ -359,6 +360,8 @@ function initNodes() {
   nodes.forEach(n => {
     n.r = (TYPE_SIZES[n.type] || 12) + Math.min(n.connections * 0.8, 10);
   });
+  nodeMap = {};
+  nodes.forEach(n => { nodeMap[n.id] = n; });
   document.getElementById('nodeCount').textContent = nodes.length;
   document.getElementById('edgeCount').textContent = edges.length;
 }
@@ -392,8 +395,8 @@ function applyForces() {
   }
   // Attraction along edges
   edges.forEach(e => {
-    const s = nodes.find(n => n.id === e.source);
-    const t = nodes.find(n => n.id === e.target);
+    const s = nodeMap[e.source];
+    const t = nodeMap[e.target];
     if (!s || !t || !s.visible || !t.visible) return;
     let dx = t.x - s.x;
     let dy = t.y - s.y;
@@ -436,8 +439,8 @@ function draw() {
 
   // Draw edges
   edges.forEach(e => {
-    const s = nodes.find(n => n.id === e.source);
-    const t = nodes.find(n => n.id === e.target);
+    const s = nodeMap[e.source];
+    const t = nodeMap[e.target];
     if (!s || !t || !s.visible || !t.visible) return;
     const highlighted = selectedNode && (s.id === selectedNode.id || t.id === selectedNode.id);
     const hovered = hoveredNode && (s.id === hoveredNode.id || t.id === hoveredNode.id);
@@ -529,7 +532,7 @@ function getNodeAt(sx, sy) {
     if (!n.visible) continue;
     const dx = n.x - wx, dy = n.y - wy;
     const d = Math.sqrt(dx * dx + dy * dy);
-    if (d < n.r * 1.3 / camZoom + 5 && d < bestD) {
+    if (d < n.r * 1.3 + 5 / camZoom && d < bestD) {
       best = n; bestD = d;
     }
   }
@@ -550,6 +553,8 @@ canvas.addEventListener('mousemove', e => {
     const [wx, wy] = screenToWorld(mouseX, mouseY);
     dragNode.x = wx; dragNode.y = wy;
     dragNode.vx = 0; dragNode.vy = 0;
+    const movedDist = Math.abs(e.clientX - dragStartX) + Math.abs(e.clientY - dragStartY);
+    if (movedDist > 5) isDragging = true;
     return;
   }
 
@@ -573,13 +578,16 @@ canvas.addEventListener('mousemove', e => {
   }
 });
 
+let dragStartX = 0, dragStartY = 0;
 canvas.addEventListener('mousedown', e => {
   const rect = canvas.getBoundingClientRect();
   const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
   const node = getNodeAt(sx, sy);
   if (node) {
     dragNode = node;
-    isDragging = true;
+    isDragging = false;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
   } else {
     isPanning = true;
     panStartX = e.clientX; panStartY = e.clientY;
@@ -589,14 +597,10 @@ canvas.addEventListener('mousedown', e => {
 });
 
 canvas.addEventListener('mouseup', e => {
-  if (dragNode && !isDragging) { /* noop */ }
   if (dragNode) {
     // If barely moved, treat as click
-    const rect = canvas.getBoundingClientRect();
-    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
-    const node = getNodeAt(sx, sy);
-    if (node && node === dragNode) {
-      selectNode(node);
+    if (!isDragging) {
+      selectNode(dragNode);
     }
   }
   dragNode = null; isDragging = false; isPanning = false;
@@ -727,6 +731,12 @@ function showDetail(node) {
 document.getElementById('detailClose').addEventListener('click', () => {
   selectedNode = null;
   detailPanel.classList.remove('open');
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    selectedNode = null;
+    detailPanel.classList.remove('open');
+  }
 });
 
 // ============================================================
