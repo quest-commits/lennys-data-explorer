@@ -226,11 +226,11 @@
   <!-- Social Proof -->
   <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
     <div style="flex:1; min-width: 120px; text-align: center; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;">
-      <div style="font-size: 1.5em; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">11</div>
+      <div style="font-size: 1.5em; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">20</div>
       <div style="font-size: 0.78em; color: var(--text-dim);">Expert Advisors</div>
     </div>
     <div style="flex:1; min-width: 120px; text-align: center; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;">
-      <div style="font-size: 1.5em; font-weight: 800; background: linear-gradient(135deg, var(--accent2), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">55+</div>
+      <div style="font-size: 1.5em; font-weight: 800; background: linear-gradient(135deg, var(--accent2), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">100+</div>
       <div style="font-size: 0.78em; color: var(--text-dim);">Real Quotes</div>
     </div>
     <div style="flex:1; min-width: 120px; text-align: center; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;">
@@ -304,6 +304,34 @@
 </div>
 
 <script>
+// ==================== PERSONALIZATION PREFIXES ====================
+const P = {
+  pm_early: "As an early-career PM, this means",
+  pm_mid: "For a mid-career PM, this means",
+  pm_senior: "As a senior PM, consider how",
+  pm_exec: "As a product leader,",
+  engineer_early: "As a junior engineer, this means",
+  engineer_mid: "For a mid-career engineer,",
+  engineer_senior: "As a senior engineer,",
+  engineer_exec: "As an engineering leader,",
+  designer_early: "As a junior designer,",
+  designer_mid: "For a mid-career designer,",
+  designer_senior: "As a senior designer,",
+  designer_exec: "As a design leader,",
+  founder_early: "As a first-time founder,",
+  founder_mid: "As a scaling founder,",
+  founder_senior: "As a seasoned founder,",
+  founder_exec: "As a CEO,",
+  growth_early: "Starting in growth,",
+  growth_mid: "As a growth practitioner,",
+  growth_senior: "As a growth leader,",
+  growth_exec: "As a VP of Growth,",
+  leader_early: "As an emerging leader,",
+  leader_mid: "As a mid-level leader,",
+  leader_senior: "As a senior leader,",
+  leader_exec: "As a C-suite executive,"
+};
+
 // ==================== WISDOM DATABASE ====================
 const advisors = [
   {
@@ -779,6 +807,95 @@ const advisors = [
         levels: ["early","mid","senior"]
       }
     ]
+  },
+  {
+    id: "boris-cherny", name: "Boris Cherny", role: "Head of Claude Code, Anthropic", avatar: "BC", color: "#6B4C9A",
+    topics: ["Engineering","AI Engineering","Career"],
+    quotes: [
+      { text: "For me, as an engineer, I find that to do good work you really have to understand the layer under the layer at which you work. If you work in AI, you just really have to understand the model.", topic: "Engineering", context: "Boris spent a month doing post-training research before building Claude Code", roles: ["engineer"], levels: ["mid","senior"] },
+      { text: "Don't try to box the model in. Almost always you get better results if you just give the model tools, you give it a goal, and you let it figure it out.", topic: "AI Engineering", context: "Advice for engineers building AI products — avoid strict orchestration", roles: ["engineer"], levels: ["mid","senior"] },
+      { text: "If you build for the model six months out, when that model comes out, you're just going to hit the ground running. Your PMF won't be great for six months, but then it clicks.", topic: "AI Engineering", context: "Build for future model capability, not current limitations", roles: ["engineer","pm"], levels: ["senior"] },
+      { text: "I think by the end of the year everyone is going to be a product manager, and everyone codes. The title software engineer is going to start to go away. It's going to be replaced by builder.", topic: "Career", context: "Boris predicts the engineer title dissolves as AI makes everyone a builder", roles: ["engineer"], levels: ["mid","senior"] }
+    ]
+  },
+  {
+    id: "chip-huyen", name: "Chip Huyen", role: "AI Engineer, Author (Nvidia, Stanford)", avatar: "CH", color: "#2E86AB",
+    topics: ["Engineering","AI Engineering","Career"],
+    quotes: [
+      { text: "The highest performing engineer gets the biggest boost out of AI coding tools. Senior engineers are the best practice engineers. They know how to solve problems.", topic: "Engineering", context: "A randomized trial showed top engineers gained the most from AI tools", roles: ["engineer"], levels: ["senior"] },
+      { text: "Companies are restructuring so senior engineers review and set standards while juniors produce AI-assisted code. But then the question becomes, how does one become a very strong senior engineer?", topic: "Career", context: "The paradox: juniors produce code, but the pipeline to senior expertise is unclear", roles: ["engineer"], levels: ["early"] },
+      { text: "ML engineers build models. AI engineers use existing models to build products. The entry barrier is super low for AI engineers, and the demand is a lot bigger.", topic: "AI Engineering", context: "Chip defines AI engineering as a new, accessible career path distinct from ML engineering", roles: ["engineer"], levels: ["early","mid"] },
+      { text: "CS is about system thinking, using coding to solve actual problems. Problem solving will never go away because as AI automates more, the problems just get bigger.", topic: "Engineering", context: "System thinking matters more than coding syntax in the AI era", roles: ["engineer"], levels: ["early"] }
+    ]
+  },
+  {
+    id: "jenny-wen", name: "Jenny Wen", role: "Design Lead, Anthropic", avatar: "JW", color: "#E07A5F",
+    topics: ["Design","Career"],
+    quotes: [
+      { text: "This design process that designers have been taught, we sort of treat it as gospel. That's basically dead. You as a designer do not have the time to make beautiful mocks anymore.", topic: "Design", context: "The traditional diverge-converge design process is over in the AI era", roles: ["designer"], levels: ["mid","senior"] },
+      { text: "A few years ago, 60 to 70% was mocking and prototyping, but now that's 30 to 40%. There's another 30 to 40% that is now jamming with engineers. And a slice is now implementation.", topic: "Design", context: "How a designer's time allocation has shifted dramatically", roles: ["designer"], levels: ["mid","senior"] },
+      { text: "Having somebody who has a blank slate, who is a quick learner without baked-in processes and rituals — that's super valuable. Those are the folks a lot of us are overlooking.", topic: "Career", context: "Early-career designers without legacy habits are uniquely valuable in the AI era", roles: ["designer"], levels: ["early"] },
+      { text: "I would just say build a bunch of stuff. The best cracked new grad folks I know are people who use the technology and build actual things, not theoretical exercises.", topic: "Career", context: "Jenny's advice for young designers trying to break in", roles: ["designer","engineer"], levels: ["early"] },
+      { text: "It helps to bring coding tools into your toolkit. Any designer should know how to use the tools at hand, as opposed to going off and learning React.", topic: "Design", context: "Designers don't need to become engineers, but should adopt AI coding tools", roles: ["designer"], levels: ["mid","senior"] }
+    ]
+  },
+  {
+    id: "dhanji-r-prasanna", name: "Dhanji R. Prasanna", role: "CTO, Block (Square)", avatar: "DP", color: "#00A676",
+    topics: ["Engineering","Career","Leadership"],
+    quotes: [
+      { text: "A lot of engineers think that code quality is important to building a successful product. The two have nothing to do with each other.", topic: "Engineering", context: "Counterintuitive lesson from building products at Google and Block", roles: ["engineer"], levels: ["mid","senior"] },
+      { text: "When you have very senior engineers thinking about architecture, design, race conditions, orchestration — that's still an area where AI isn't quite there. Companies that aren't seeing AI success are just throwing tools at giant codebases.", topic: "Engineering", context: "Senior engineering skills in architecture remain beyond AI capability", roles: ["engineer"], levels: ["senior"] },
+      { text: "I'm much more keen on looking for that college grad who is eager to learn about these tools. A learning mindset is how I would put it.", topic: "Career", context: "Block changed engineering hiring to prioritize AI-tool eagerness over specific tech skills", roles: ["engineer"], levels: ["early"] },
+      { text: "I regularly throw away huge amounts of code. Build a whole new feature and it doesn't feel right? Delete it, start over. What if every release deleted the entire app and rebuilt from scratch?", topic: "Engineering", context: "Treat AI-generated code as disposable drafts, not precious artifacts", roles: ["engineer"], levels: ["mid","senior"] }
+    ]
+  },
+  {
+    id: "nick-turley", name: "Nick Turley", role: "Head of Product, ChatGPT at OpenAI", avatar: "NT", color: "#3D348B",
+    topics: ["Product Craft","Career","AI Engineering"],
+    quotes: [
+      { text: "I started writing evals before I knew what an eval was. I was just outlining ideal behavior for use cases. This might be the lingua franca for communicating product specs to AI research teams.", topic: "Product Craft", context: "Evals as the bridge between product specifications and AI research", roles: ["pm"], levels: ["mid","senior"] },
+      { text: "This is a pattern with AI: you won't know what to polish until after you ship. Shipping is just one point on the journey towards awesomeness. Pick that point intentionally.", topic: "Product Craft", context: "Redefining product craft in AI — polish comes after shipping, not before", roles: ["pm","designer"], levels: ["mid","senior"] },
+      { text: "If you are just curious about how the stuff works, it doesn't matter if you've never done it before. Curiosity matters far more than ML experience for AI product roles.", topic: "Career", context: "Hiring for curiosity over credentials at OpenAI", roles: ["pm","designer","engineer"], levels: ["early","mid"] },
+      { text: "If a feature doesn't get 2X better as the model gets 2X smarter, it's probably not a feature we should be shipping.", topic: "Product Craft", context: "Nick's litmus test for AI features — they must compound with model intelligence", roles: ["pm","engineer"], levels: ["senior"] }
+    ]
+  },
+  {
+    id: "albert-cheng", name: "Albert Cheng", role: "VP Growth, Chess.com (ex-Duolingo, Grammarly)", avatar: "AC", color: "#4A90D9",
+    topics: ["Growth","Career"],
+    quotes: [
+      { text: "Growth gets this reputation of pure metrics hacking. I describe growth as the job of connecting users to the value of your product.", topic: "Growth", context: "Reframing the growth role away from metrics hacking", roles: ["growth"], levels: ["early","mid"] },
+      { text: "We tracked where users were screenshotting to find organic viral moments, then invested in making those moments delightful. You can 5X growth that way.", topic: "Growth", context: "At Duolingo, finding organic sharing moments rather than forcing referrals", roles: ["growth","pm"], levels: ["mid","senior"] },
+      { text: "Over and over, the highest performers were people with very high agency and clock speed. They didn't need deep experience. In fact, sometimes experience was a crutch.", topic: "Career", context: "Albert now hires for agency and speed over domain experience", roles: ["growth","pm"], levels: ["senior"] },
+      { text: "Everyone has a company stage they shine best at. I've gone from big tech to tiny startup, then landed in the middle — my Goldilocks zone.", topic: "Career", context: "Finding the right company size for your working style", roles: ["growth","pm"], levels: ["mid","senior"] }
+    ]
+  },
+  {
+    id: "madhavan-ramanujam", name: "Madhavan Ramanujam", role: "Senior Partner, Simon-Kucher; Author of Monetizing Innovation", avatar: "MR", color: "#8E44AD",
+    topics: ["Pricing","Strategy"],
+    quotes: [
+      { text: "Price is a measure of value, like liter is a measure of volume. Entrepreneurs need to test willingness to pay much earlier so they know if they're on the right track.", topic: "Pricing", context: "Reframing pricing as a value measurement tool, not a late-stage decision", roles: ["founder","pm"], levels: ["early","mid"] },
+      { text: "90% of customers who claim to have a land and expand strategy are only landing. They're not expanding because they gave their farm away in the land.", topic: "Pricing", context: "The most common pricing mistake in SaaS", roles: ["founder","pm","growth"], levels: ["mid","senior"] },
+      { text: "They built a decoy product at $299 to make $99 look attractive. 30%+ increase in MRR. No product changes, just reframing the conversation.", topic: "Pricing", context: "Psychological pricing and decoy tiers for instant revenue lift", roles: ["founder","pm","growth"], levels: ["mid","senior"] },
+      { text: "Before you discount, think about what value you can exchange. Give more product, change contract terms, change payment terms — three alternatives before touching price.", topic: "Pricing", context: "Three non-pricing actions before discounting", roles: ["founder","growth"], levels: ["senior","exec"] }
+    ]
+  },
+  {
+    id: "scott-wu", name: "Scott Wu", role: "CEO, Cognition (Devin)", avatar: "SW", color: "#2ECC71",
+    topics: ["AI Engineering","Engineering"],
+    quotes: [
+      { text: "Devin is best when working on well-defined tasks. You want to give it tasks, not problems. Quick front-end features, bug fixes, adding tests — easy to verify and test.", topic: "AI Engineering", context: "The sweet spot for AI coding agents: scoped tasks with clear verification", roles: ["engineer"], levels: ["mid","senior"] },
+      { text: "PMs use Devin to query engineering systems — is this merged? What percent of people are getting this feature? It makes technical intelligence accessible.", topic: "AI Engineering", context: "PMs using AI agents to understand technical state without bothering engineers", roles: ["pm"], levels: ["mid","senior"] },
+      { text: "New engineers ask Devin questions about the codebase instead of worrying about asking dumb questions to their mentor. It's a safe way to onboard.", topic: "AI Engineering", context: "AI agents as a frictionless onboarding tool for junior engineers", roles: ["engineer"], levels: ["early"] }
+    ]
+  },
+  {
+    id: "lazar-jovanovic", name: "Lazar Jovanovic", role: "Professional Vibe Coder, Lovable", avatar: "LZ", color: "#E74C3C",
+    topics: ["AI","Career"],
+    quotes: [
+      { text: "AI, regardless of your background, is an amplifier. If you don't know what you're doing, you're just going to produce garbage faster.", topic: "AI", context: "AI tools amplify competence and incompetence equally", roles: ["founder","pm","designer"], levels: ["early"] },
+      { text: "Set aside more time on learning than building. Read the agent output. Learn how it's thinking so you know what's possible.", topic: "AI", context: "Invest time studying AI agent output rather than just prompting", roles: ["designer","pm"], levels: ["early","mid"] },
+      { text: "We're going to be paid to think longer and ponder longer. The longer an idea simmers, the better, because building it is going to be instant.", topic: "AI", context: "As AI handles execution, the premium skill becomes clarity of thought", roles: ["pm","designer","founder"], levels: ["early","mid"] }
+    ]
   }
 ];
 
@@ -818,13 +935,14 @@ function selectChallenge(id) {
 
 function getAdvice() {
   if (!selectedChallenge) {
-    alert('Please select a challenge first!');
+    document.getElementById('advice-container').innerHTML = '<p style="color: var(--accent3); text-align: center; padding: 20px; background: var(--surface); border-radius: 10px;">Please select a challenge above first.</p>';
     return;
   }
   const role = document.getElementById('role-select').value;
   const level = document.getElementById('level-select').value;
   const challenge = challenges.find(c => c.id === selectedChallenge);
   const relevantTopics = challenge.topics;
+  const pKey = role + '_' + level;
 
   let allQuotes = [];
   advisors.forEach(adv => {
@@ -832,41 +950,49 @@ function getAdvice() {
       const topicMatch = relevantTopics.some(t => q.topic.toLowerCase().includes(t.toLowerCase()) || t.toLowerCase().includes(q.topic.toLowerCase()));
       const roleMatch = q.roles.includes(role);
       const levelMatch = q.levels.includes(level);
+      // New scoring: role=3, topic=2, level=2. Need >= 4 to show.
       let score = 0;
-      if (topicMatch) score += 3;
-      if (roleMatch) score += 2;
-      if (levelMatch) score += 1;
-      if (score >= 3) {
+      if (roleMatch) score += 3;
+      if (topicMatch) score += 2;
+      if (levelMatch) score += 2;
+      if (score >= 4) {
         allQuotes.push({ ...q, advisor: adv, score });
       }
     });
   });
 
-  // Sort by score, then shuffle within same score for variety
   allQuotes.sort((a, b) => b.score - a.score);
 
-  // Take top quotes, max 2 per advisor
+  // Split into best match (score >= 5) and also relevant (score 4)
   const advCount = {};
-  const selected = [];
+  const bestMatch = [];
+  const alsoRelevant = [];
   for (const q of allQuotes) {
     const aid = q.advisor.id;
     advCount[aid] = (advCount[aid] || 0);
-    if (advCount[aid] < 2 && selected.length < 6) {
-      selected.push(q);
-      advCount[aid]++;
+    if (advCount[aid] >= 1) continue; // max 1 per advisor for variety
+    advCount[aid]++;
+    if (q.score >= 5 && bestMatch.length < 4) {
+      bestMatch.push(q);
+    } else if (alsoRelevant.length < 2) {
+      alsoRelevant.push(q);
     }
   }
 
   const container = document.getElementById('advice-container');
-  if (selected.length === 0) {
+  if (bestMatch.length === 0 && alsoRelevant.length === 0) {
     container.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 40px;">No specific advice found for this combination. Try a different challenge or role.</p>';
     return;
   }
 
-  container.innerHTML = `
-    <div class="section-title" style="margin-top: 24px;">Advice for You</div>
-    ${selected.map((q, i) => `
+  const prefix = P[pKey] || 'For you,';
+
+  function renderCard(q, i, label) {
+    // Generate personalization based on role+level+context
+    const personalized = generatePersonalization(prefix, q, role, level);
+    return `
       <div class="advice-card" style="animation-delay: ${i * 0.1}s">
+        ${label ? '<div style="font-size:0.7em;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:10px;">' + label + '</div>' : ''}
         <div class="guest-header">
           <div class="guest-avatar" style="background: linear-gradient(135deg, ${q.advisor.color}, ${q.advisor.color}dd)">${q.advisor.avatar}</div>
           <div>
@@ -875,13 +1001,54 @@ function getAdvice() {
           </div>
         </div>
         <blockquote>"${q.text}"</blockquote>
+        <div style="font-size:0.85em;color:var(--green);line-height:1.5;margin:10px 0;padding:10px 14px;background:rgba(16,185,129,0.08);border-radius:8px;border-left:3px solid var(--green);">
+          ${personalized}
+        </div>
         <div class="context">${q.context}</div>
-      </div>
-    `).join('')}
-  `;
+      </div>`;
+  }
 
-  // Also build reading list
+  let html = '<div class="section-title" style="margin-top: 24px;">Best Matches for You</div>';
+  bestMatch.forEach((q, i) => { html += renderCard(q, i, null); });
+  if (alsoRelevant.length > 0) {
+    html += '<div class="section-title" style="margin-top: 20px; font-size: 1em; color: var(--text-dim);">Also Relevant</div>';
+    alsoRelevant.forEach((q, i) => { html += renderCard(q, bestMatch.length + i, null); });
+  }
+  container.innerHTML = html;
+
   buildReadingList(challenge, role, level);
+}
+
+function generatePersonalization(prefix, q, role, level) {
+  // Role-specific personalization insights
+  const roleInsights = {
+    engineer: { early: "focus on building a learning habit with AI tools — your lack of legacy habits is an advantage right now.",
+      mid: "this directly impacts how you architect systems and choose what to automate vs. hand-craft.",
+      senior: "your deep expertise becomes more valuable as you shift from writing code to reviewing and directing AI-generated output.",
+      exec: "consider how this reshapes your team structure, hiring criteria, and what 'senior' means going forward." },
+    pm: { early: "start by deeply understanding the technology, then use that knowledge to write better specs and evals.",
+      mid: "use this to sharpen how you define problems and measure success — that's where PMs add the most value now.",
+      senior: "your strategic judgment matters more than ever as AI handles execution — focus on what to build, not how.",
+      exec: "think about how this changes your product org structure and what skills you hire for." },
+    designer: { early: "build real things with AI tools — portfolios of shipped prototypes matter more than polished mockups now.",
+      mid: "your time allocation is shifting — less mocking, more pairing with engineers and implementing directly.",
+      senior: "the traditional design process is being rewritten — lead the reinvention rather than clinging to old workflows.",
+      exec: "rethink your design org around these new workflows and what 'design excellence' means in the AI era." },
+    founder: { early: "validate fast and don't over-invest in things AI can rebuild in minutes — focus on finding real problems.",
+      mid: "apply this as you scale — the companies growing fastest right now are the ones adapting their playbook every quarter.",
+      senior: "your pattern-matching experience plus AI leverage is a powerful combination — but watch for outdated patterns.",
+      exec: "this affects your entire company strategy, hiring, and how fast your competitive landscape shifts." },
+    growth: { early: "learn the fundamentals of experimentation and data modeling — they still apply, just faster.",
+      mid: "the growth playbook is being rewritten — spend more time on innovation than optimization right now.",
+      senior: "your job is increasingly about standing up new growth loops, not optimizing existing ones.",
+      exec: "the channels, tactics, and even org structure for growth teams are fundamentally different now." },
+    leader: { early: "build the muscle of making decisions with incomplete information — that's the core leadership skill.",
+      mid: "focus on creating the conditions for your team to move fast rather than directing every decision.",
+      senior: "the best leaders right now are the ones who can hold ambiguity while still moving decisively.",
+      exec: "this is about organizational design and culture as much as individual decisions." }
+  };
+  const insight = (roleInsights[role] && roleInsights[role][level]) || "consider how this applies to your specific situation.";
+  return prefix + " " + insight;
 }
 
 function buildReadingList(challenge, role, level) {
@@ -895,7 +1062,16 @@ function buildReadingList(challenge, role, level) {
     { title: "Stewart Butterfield: Mental models for building products people love", match: "Product Craft, Design, User Experience", topics: ["Product Craft","Design","User Experience","Pivoting","Strategy"], desc: "Utility curves, divine discontent, don't make users think, and lessons from pivoting twice." },
     { title: "Jason Cohen: 5 questions when your product stops growing", match: "Growth, Pricing, Retention", topics: ["Growth","Pricing","Retention","Strategy"], desc: "Logo retention, pricing signals, channel saturation, NRR, and the contrarian question: do you even need to grow?" },
     { title: "Jason Lemkin: Building your sales team in the AI era", match: "Sales, B2B, Hiring", topics: ["Sales","B2B","Hiring","Founder Life"], desc: "Why founders are A+ middlers, being honest about your sales motion, and when to hire your first salesperson." },
-    { title: "How Duolingo Reignited User Growth (Newsletter)", match: "Growth, Gamification, Retention, Data Models", topics: ["Growth","Gamification","Retention","Data Models"], desc: "CURR metric, leaderboards, streaks, push notifications, and the story of 4.5x DAU growth." }
+    { title: "How Duolingo Reignited User Growth (Newsletter)", match: "Growth, Gamification, Retention, Data Models", topics: ["Growth","Gamification","Retention","Data Models"], desc: "CURR metric, leaderboards, streaks, push notifications, and the story of 4.5x DAU growth." },
+    { title: "Boris Cherny: Building Claude Code at Anthropic", match: "Engineering, AI Engineering, Career", topics: ["Engineering","AI Engineering","Career"], desc: "Understanding the model layer, building for future capabilities, and why the engineer title is dissolving." },
+    { title: "Chip Huyen: AI Engineering 101", match: "Engineering, AI Engineering, Career", topics: ["Engineering","AI Engineering","Career"], desc: "Senior vs junior AI productivity, the AI engineer career path, and system thinking over syntax." },
+    { title: "Jenny Wen: Product design in the AI era", match: "Design, Career", topics: ["Design","Career","Product Craft"], desc: "The death of the traditional design process, new designer archetypes, and coding as a design tool." },
+    { title: "Dhanji Prasanna: How Block became AI-native", match: "Engineering, Leadership, Career", topics: ["Engineering","Leadership","Career"], desc: "Code quality vs product success, disposable code mindset, and hiring for learning over credentials." },
+    { title: "Nick Turley: Inside ChatGPT at OpenAI", match: "Product Craft, AI Engineering, Career", topics: ["Product Craft","AI Engineering","Career"], desc: "Evals as the PM-to-research bridge, shipping before polishing, and curiosity over ML experience." },
+    { title: "Albert Cheng: Finding hidden growth opportunities", match: "Growth, Career", topics: ["Growth","Career"], desc: "Screenshot-based viral discovery, experimentation culture, and hiring for agency over experience." },
+    { title: "Madhavan Ramanujam: Pricing your AI product", match: "Pricing, Strategy", topics: ["Pricing","Strategy"], desc: "Willingness to pay testing, decoy pricing, land-and-expand mistakes, and alternatives to discounting." },
+    { title: "Scott Wu: How Devin replaces junior engineers", match: "AI Engineering, Engineering", topics: ["AI Engineering","Engineering"], desc: "Task scoping for AI agents, async agentic workflows, and PMs querying engineering systems." },
+    { title: "Lazar Jovanovic: The professional vibe coder", match: "AI, Career", topics: ["AI","Career"], desc: "AI as amplifier, learning from agent output, and being paid to think rather than build." }
   ];
 
   const relevantTopics = challenge.topics;
