@@ -263,15 +263,6 @@
           <option value="leader">Engineering / Product Leader</option>
         </select>
       </div>
-      <div class="form-group">
-        <label for="level-select">Experience Level</label>
-        <select id="level-select">
-          <option value="early">Early Career (0-3 years)</option>
-          <option value="mid">Mid Career (3-8 years)</option>
-          <option value="senior">Senior (8-15 years)</option>
-          <option value="exec">Executive / C-Suite</option>
-        </select>
-      </div>
     </div>
 
     <div class="section-title">What's your challenge?</div>
@@ -304,34 +295,6 @@
 </div>
 
 <script>
-// ==================== PERSONALIZATION PREFIXES ====================
-const P = {
-  pm_early: "As an early-career PM, this means",
-  pm_mid: "For a mid-career PM, this means",
-  pm_senior: "As a senior PM, consider how",
-  pm_exec: "As a product leader,",
-  engineer_early: "As a junior engineer, this means",
-  engineer_mid: "For a mid-career engineer,",
-  engineer_senior: "As a senior engineer,",
-  engineer_exec: "As an engineering leader,",
-  designer_early: "As a junior designer,",
-  designer_mid: "For a mid-career designer,",
-  designer_senior: "As a senior designer,",
-  designer_exec: "As a design leader,",
-  founder_early: "As a first-time founder,",
-  founder_mid: "As a scaling founder,",
-  founder_senior: "As a seasoned founder,",
-  founder_exec: "As a CEO,",
-  growth_early: "Starting in growth,",
-  growth_mid: "As a growth practitioner,",
-  growth_senior: "As a growth leader,",
-  growth_exec: "As a VP of Growth,",
-  leader_early: "As an emerging leader,",
-  leader_mid: "As a mid-level leader,",
-  leader_senior: "As a senior leader,",
-  leader_exec: "As a C-suite executive,"
-};
-
 // ==================== WISDOM DATABASE ====================
 const advisors = [
   {
@@ -939,60 +902,58 @@ function getAdvice() {
     return;
   }
   const role = document.getElementById('role-select').value;
-  const level = document.getElementById('level-select').value;
   const challenge = challenges.find(c => c.id === selectedChallenge);
   const relevantTopics = challenge.topics;
-  const pKey = role + '_' + level;
 
   let allQuotes = [];
   advisors.forEach(adv => {
     adv.quotes.forEach(q => {
       const topicMatch = relevantTopics.some(t => q.topic.toLowerCase().includes(t.toLowerCase()) || t.toLowerCase().includes(q.topic.toLowerCase()));
       const roleMatch = q.roles.includes(role);
-      const levelMatch = q.levels.includes(level);
-      // New scoring: role=3, topic=2, level=2. Need >= 4 to show.
       let score = 0;
       if (roleMatch) score += 3;
       if (topicMatch) score += 2;
-      if (levelMatch) score += 2;
-      if (score >= 4) {
+      if (score >= 5) {
         allQuotes.push({ ...q, advisor: adv, score });
       }
     });
   });
 
+  // Fallback: if no role+topic match, show topic-only matches
+  if (allQuotes.length < 3) {
+    advisors.forEach(adv => {
+      adv.quotes.forEach(q => {
+        const topicMatch = relevantTopics.some(t => q.topic.toLowerCase().includes(t.toLowerCase()) || t.toLowerCase().includes(q.topic.toLowerCase()));
+        if (topicMatch && !allQuotes.find(x => x.text === q.text)) {
+          allQuotes.push({ ...q, advisor: adv, score: 2 });
+        }
+      });
+    });
+  }
+
   allQuotes.sort((a, b) => b.score - a.score);
 
-  // Split into best match (score >= 5) and also relevant (score 4)
+  // Max 1 per advisor, take top 4
   const advCount = {};
-  const bestMatch = [];
-  const alsoRelevant = [];
+  const selected = [];
   for (const q of allQuotes) {
     const aid = q.advisor.id;
-    advCount[aid] = (advCount[aid] || 0);
-    if (advCount[aid] >= 1) continue; // max 1 per advisor for variety
-    advCount[aid]++;
-    if (q.score >= 5 && bestMatch.length < 4) {
-      bestMatch.push(q);
-    } else if (alsoRelevant.length < 2) {
-      alsoRelevant.push(q);
-    }
+    if (advCount[aid]) continue;
+    advCount[aid] = true;
+    selected.push(q);
+    if (selected.length >= 4) break;
   }
 
   const container = document.getElementById('advice-container');
-  if (bestMatch.length === 0 && alsoRelevant.length === 0) {
-    container.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 40px;">No specific advice found for this combination. Try a different challenge or role.</p>';
+  if (selected.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 40px;">No specific advice found. Try a different challenge or role.</p>';
     return;
   }
 
-  const prefix = P[pKey] || 'For you,';
-
-  function renderCard(q, i, label) {
-    // Generate personalization based on role+level+context
-    const personalized = generatePersonalization(prefix, q, role, level);
-    return `
+  container.innerHTML = `
+    <div class="section-title" style="margin-top: 24px;">Advice for You</div>
+    ${selected.map((q, i) => `
       <div class="advice-card" style="animation-delay: ${i * 0.1}s">
-        ${label ? '<div style="font-size:0.7em;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:10px;">' + label + '</div>' : ''}
         <div class="guest-header">
           <div class="guest-avatar" style="background: linear-gradient(135deg, ${q.advisor.color}, ${q.advisor.color}dd)">${q.advisor.avatar}</div>
           <div>
@@ -1001,57 +962,15 @@ function getAdvice() {
           </div>
         </div>
         <blockquote>"${q.text}"</blockquote>
-        <div style="font-size:0.85em;color:var(--green);line-height:1.5;margin:10px 0;padding:10px 14px;background:rgba(16,185,129,0.08);border-radius:8px;border-left:3px solid var(--green);">
-          ${personalized}
-        </div>
         <div class="context">${q.context}</div>
-      </div>`;
-  }
+      </div>
+    `).join('')}
+  `;
 
-  let html = '<div class="section-title" style="margin-top: 24px;">Best Matches for You</div>';
-  bestMatch.forEach((q, i) => { html += renderCard(q, i, null); });
-  if (alsoRelevant.length > 0) {
-    html += '<div class="section-title" style="margin-top: 20px; font-size: 1em; color: var(--text-dim);">Also Relevant</div>';
-    alsoRelevant.forEach((q, i) => { html += renderCard(q, bestMatch.length + i, null); });
-  }
-  container.innerHTML = html;
-
-  buildReadingList(challenge, role, level);
+  buildReadingList(challenge, role);
 }
 
-function generatePersonalization(prefix, q, role, level) {
-  // Role-specific personalization insights
-  const roleInsights = {
-    engineer: { early: "focus on building a learning habit with AI tools — your lack of legacy habits is an advantage right now.",
-      mid: "this directly impacts how you architect systems and choose what to automate vs. hand-craft.",
-      senior: "your deep expertise becomes more valuable as you shift from writing code to reviewing and directing AI-generated output.",
-      exec: "consider how this reshapes your team structure, hiring criteria, and what 'senior' means going forward." },
-    pm: { early: "start by deeply understanding the technology, then use that knowledge to write better specs and evals.",
-      mid: "use this to sharpen how you define problems and measure success — that's where PMs add the most value now.",
-      senior: "your strategic judgment matters more than ever as AI handles execution — focus on what to build, not how.",
-      exec: "think about how this changes your product org structure and what skills you hire for." },
-    designer: { early: "build real things with AI tools — portfolios of shipped prototypes matter more than polished mockups now.",
-      mid: "your time allocation is shifting — less mocking, more pairing with engineers and implementing directly.",
-      senior: "the traditional design process is being rewritten — lead the reinvention rather than clinging to old workflows.",
-      exec: "rethink your design org around these new workflows and what 'design excellence' means in the AI era." },
-    founder: { early: "validate fast and don't over-invest in things AI can rebuild in minutes — focus on finding real problems.",
-      mid: "apply this as you scale — the companies growing fastest right now are the ones adapting their playbook every quarter.",
-      senior: "your pattern-matching experience plus AI leverage is a powerful combination — but watch for outdated patterns.",
-      exec: "this affects your entire company strategy, hiring, and how fast your competitive landscape shifts." },
-    growth: { early: "learn the fundamentals of experimentation and data modeling — they still apply, just faster.",
-      mid: "the growth playbook is being rewritten — spend more time on innovation than optimization right now.",
-      senior: "your job is increasingly about standing up new growth loops, not optimizing existing ones.",
-      exec: "the channels, tactics, and even org structure for growth teams are fundamentally different now." },
-    leader: { early: "build the muscle of making decisions with incomplete information — that's the core leadership skill.",
-      mid: "focus on creating the conditions for your team to move fast rather than directing every decision.",
-      senior: "the best leaders right now are the ones who can hold ambiguity while still moving decisively.",
-      exec: "this is about organizational design and culture as much as individual decisions." }
-  };
-  const insight = (roleInsights[role] && roleInsights[role][level]) || "consider how this applies to your specific situation.";
-  return prefix + " " + insight;
-}
-
-function buildReadingList(challenge, role, level) {
+function buildReadingList(challenge, role) {
   const episodes = [
     { title: "Marc Andreessen: The real AI boom hasn't even started yet", match: "AI, Career, Future of Work", topics: ["AI","Career","Future of Work"], desc: "Why AI is the philosopher's stone, the future of PM/engineer/designer roles, and how to become a super-empowered individual." },
     { title: "Ben Horowitz: Why founders fail and why you need to run toward fear", match: "Leadership, Founder Life, Decision Making", topics: ["Leadership","Founder Life","Decision Making","Product Management"], desc: "Running toward fear, making impossible decisions, Good PM/Bad PM, and why the only reason to start a company is irrational desire." },
